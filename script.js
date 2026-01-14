@@ -12,17 +12,17 @@ let isSorting = false;
 const explanations = {
     bubble: {
         title: "Bubble Sort",
-        desc: "A rhythmic exchange where heavier elements sink to the end of the collection through local comparisons.",
+        desc: "Many exchanges where larger elements drift to the end of the set through local comparisons.",
         complexity: "O(n²)"
     },
     merge: {
         title: "Merge Sort",
-        desc: "A divide-and-conquer philosophy. It fractures the collection into individual units before harmonizing them back together.",
+        desc: "A divide-and-conquer philosophy. It fractures the set before integrating them back together.",
         complexity: "O(n log n)"
     },
     quick: {
         title: "Quick Sort",
-        desc: "A pivot acts as a mirror, reflecting elements to their rightful sides until the chaos is structured.",
+        desc: "A pivot acts as a mirror, reflecting elements to their correct sides until the set is sorted.",
         complexity: "O(n log n)"
     }
 };
