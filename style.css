@@ -1,3 +1,63 @@
+:root {
+    --bg-color: #F9F7F2;
+    --text-color: #2C2C2C;
+    --accent-color: #A67C52; /* Muted Clay */
+    --bar-color: #E6E2D6;
+    --transition-smooth: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    overflow: hidden;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    height: 100vh;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    padding: 3rem;
+    border-right: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+h1 { font-family: 'Playfair Display', serif; font-weight: 400; font-size: 1.5rem; margin-bottom: 0.5rem; }
+h1 span { font-style: italic; color: var(--accent-color); }
+
+.visualizer-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+}
+
+/* The Array Bars */
+#array-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 300px;
+}
+
+.bar {
+    background-color: var(--bar-color);
+    width: 30px;
+    transition: var(--transition-smooth);
+    border-radius: 2px;
+    position: relative;
+}
+
+.bar.active { background-color: var(--accent-color); transform: translateY(-10px); }
+.bar.sorted { background-color: #D1D1D1; }
+
 /* Refined Controls */
 .controls {
     display: flex;
