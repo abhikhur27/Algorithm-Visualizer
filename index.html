@@ -5,37 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editorial Algorithms</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Inter:wght@300;400&避风塘=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 </head>
-<body>
+<body data-theme="light">
     <main class="grid-container">
         <aside class="sidebar">
-            <header>
-                <h1>Editorial / <span>Sorting</span></h1>
-                <p class="subtitle">A calm exploration of computational logic.</p>
-            </header>
-            
-            <section id="explanation">
-                <h2 id="algo-title">Select an Algorithm</h2>
-                <p id="algo-description">The visualizer will guide you through the spatial rearrangement of data.</p>
-                <div class="stats">
-                    <div class="stat-item"><span>Complexity:</span> <strong id="complexity">-</strong></div>
-                </div>
-            </section>
+            <div class="sidebar-content">
+                <header>
+                    <h1>Editorial / <span>Sorting</span></h1>
+                    <p class="subtitle">A calm exploration of logic.</p>
+                </header>
+                
+                <section id="explanation">
+                    <h2 id="algo-title">Select an Algorithm</h2>
+                    <p id="algo-description">The visualizer will guide you through the spatial rearrangement of data.</p>
+                    <div class="stats">
+                        <div class="stat-item">Complexity: <strong id="complexity">-</strong></div>
+                    </div>
+                </section>
 
-            <nav class="controls">
-                <select id="algo-select">
-                    <option value="bubble">Bubble Sort</option>
-                    <option value="merge">Merge Sort</option>
-                    <option value="quick">Quick Sort</option>
-                </select>
-                <div class="button-group">
-                    <button id="start-btn">Begin</button>
-                    <button id="reset-btn">Reset</button>
-                </div>
-                <input type="range" id="speed" min="50" max="1000" value="400" step="50">
-                <label for="speed">Tempo</label>
-            </nav>
+                <nav class="controls">
+                    <select id="algo-select">
+                        <option value="bubble">Bubble Sort</option>
+                        <option value="merge">Merge Sort</option>
+                        <option value="quick">Quick Sort</option>
+                    </select>
+                    
+                    <div class="button-group">
+                        <button id="start-btn">Begin</button>
+                        <button id="reset-btn">Reset</button>
+                    </div>
+
+                    <div class="slider-group">
+                        <label for="speed">Tempo</label>
+                        <input type="range" id="speed" min="50" max="1000" value="600" step="50">
+                    </div>
+
+                    <button id="theme-toggle" class="secondary-btn">Midnight Mode</button>
+                </nav>
+            </div>
+
+            <footer class="sidebar-footer">
+                <a href="https://abhikhur27.github.io" class="portfolio-link">← Return to Portfolio</a>
+            </footer>
         </aside>
 
         <section class="visualizer-area">
