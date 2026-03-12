@@ -11,6 +11,7 @@ const randomizeBtn = document.getElementById('randomize-btn');
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const stepBtn = document.getElementById('step-btn');
+const backBtn = document.getElementById('back-btn');
 const resetBtn = document.getElementById('reset-btn');
 const statusText = document.getElementById('status-text');
 const comparisonsEl = document.getElementById('comparisons');
@@ -158,6 +159,27 @@ function applyStep(step) {
     currentArray[step.index] = step.value;
     stats.writes += 1;
     renderArray({ swap: [step.index] });
+  }
+}
+
+function rebuildToStep(targetStep) {
+  currentArray = [...baseArray];
+  stats = { comparisons: 0, swaps: 0, writes: 0 };
+
+  for (let i = 0; i < targetStep; i += 1) {
+    const step = steps[i];
+    if (!step) continue;
+
+    if (step.type === 'compare') {
+      stats.comparisons += 1;
+    } else if (step.type === 'swap') {
+      const [a, b] = step.indices;
+      [currentArray[a], currentArray[b]] = [currentArray[b], currentArray[a]];
+      stats.swaps += 1;
+    } else if (step.type === 'overwrite') {
+      currentArray[step.index] = step.value;
+      stats.writes += 1;
+    }
   }
 }
 
@@ -430,6 +452,24 @@ stepBtn.addEventListener('click', () => {
   }
   runOneStep();
   setStatus(`Stepped to ${stepIndex}/${steps.length}.`);
+});
+
+backBtn.addEventListener('click', () => {
+  if (isRunning) return;
+  if (!steps.length) {
+    setStatus('No execution history yet. Press Start or Step first.');
+    return;
+  }
+  if (stepIndex <= 0) {
+    setStatus('Already at the initial state.');
+    return;
+  }
+
+  stepIndex = Math.max(0, stepIndex - 1);
+  rebuildToStep(stepIndex);
+  renderArray();
+  updateStatsDisplay();
+  setStatus(`Moved back to ${stepIndex}/${steps.length}.`);
 });
 
 resetBtn.addEventListener('click', resetToBase);
