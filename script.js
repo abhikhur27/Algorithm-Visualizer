@@ -17,6 +17,7 @@ const comparisonsEl = document.getElementById('comparisons');
 const swapsEl = document.getElementById('swaps');
 const writesEl = document.getElementById('writes');
 const stepProgressEl = document.getElementById('step-progress');
+const theoryOpsEl = document.getElementById('theory-ops');
 const algoNote = document.getElementById('algo-note');
 
 const algorithmNotes = {
@@ -77,6 +78,18 @@ function updateStatsDisplay() {
   swapsEl.textContent = String(stats.swaps);
   writesEl.textContent = String(stats.writes);
   stepProgressEl.textContent = `${Math.min(stepIndex, steps.length)} / ${steps.length}`;
+  theoryOpsEl.textContent = estimateTheoryOps();
+}
+
+function estimateTheoryOps() {
+  const n = Math.max(1, currentArray.length);
+  const nLogN = Math.round(n * Math.log2(Math.max(2, n)));
+
+  if (algorithmSelect.value === 'merge' || algorithmSelect.value === 'quick') {
+    return `~${nLogN}`;
+  }
+
+  return `~${n * n}`;
 }
 
 function resetStats() {
