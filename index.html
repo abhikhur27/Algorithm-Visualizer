@@ -40,7 +40,13 @@
         <input id="speed-slider" type="range" min="20" max="300" value="80" step="10">
       </label>
 
+      <label>
+        Custom Array (comma-separated)
+        <input id="custom-array" type="text" placeholder="e.g. 44, 12, 98, 7, 31">
+      </label>
+
       <div class="buttons">
+        <button id="apply-array-btn" type="button">Apply Array</button>
         <button id="randomize-btn" type="button">Randomize</button>
         <button id="start-btn" class="primary" type="button">Start</button>
         <button id="pause-btn" type="button">Pause</button>
@@ -64,6 +70,10 @@
         <article role="listitem">
           <h3>Writes</h3>
           <p id="writes">0</p>
+        </article>
+        <article role="listitem">
+          <h3>Step Progress</h3>
+          <p id="step-progress">0 / 0</p>
         </article>
       </div>
 

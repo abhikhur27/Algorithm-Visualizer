@@ -2,6 +2,8 @@ const arrayContainer = document.getElementById('array-container');
 const algorithmSelect = document.getElementById('algorithm-select');
 const sizeSlider = document.getElementById('size-slider');
 const speedSlider = document.getElementById('speed-slider');
+const customArrayInput = document.getElementById('custom-array');
+const applyArrayBtn = document.getElementById('apply-array-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
@@ -13,6 +15,7 @@ const statusText = document.getElementById('status-text');
 const comparisonsEl = document.getElementById('comparisons');
 const swapsEl = document.getElementById('swaps');
 const writesEl = document.getElementById('writes');
+const stepProgressEl = document.getElementById('step-progress');
 const algoNote = document.getElementById('algo-note');
 
 const algorithmNotes = {
@@ -50,6 +53,7 @@ function updateStatsDisplay() {
   comparisonsEl.textContent = String(stats.comparisons);
   swapsEl.textContent = String(stats.swaps);
   writesEl.textContent = String(stats.writes);
+  stepProgressEl.textContent = `${Math.min(stepIndex, steps.length)} / ${steps.length}`;
 }
 
 function resetStats() {
@@ -135,6 +139,21 @@ function runOneStep() {
   if (stepIndex >= steps.length) {
     finishPlayback();
   }
+}
+
+function parseCustomArray() {
+  const raw = customArrayInput.value.trim();
+  if (!raw) return null;
+
+  const values = raw
+    .split(',')
+    .map((token) => Number.parseInt(token.trim(), 10))
+    .filter((value) => Number.isInteger(value));
+
+  if (!values.length) return null;
+  if (values.length < 5 || values.length > 120) return null;
+
+  return values.map((value) => Math.max(4, Math.min(100, value)));
 }
 
 function startPlayback() {
@@ -308,6 +327,7 @@ function resetToBase() {
   stepIndex = 0;
   resetStats();
   renderArray();
+  updateStatsDisplay();
   setStatus('Reset complete. Ready to run.');
 }
 
@@ -320,7 +340,28 @@ function regenerateArray() {
   stepIndex = 0;
   resetStats();
   renderArray();
+  updateStatsDisplay();
   setStatus('New array generated.');
+}
+
+function applyCustomArray() {
+  const parsed = parseCustomArray();
+  if (!parsed) {
+    setStatus('Provide 5-120 comma-separated integers (example: 9, 45, 12, 80).');
+    return;
+  }
+
+  stopPlayback();
+  baseArray = [...parsed];
+  currentArray = [...parsed];
+  steps = [];
+  stepIndex = 0;
+  resetStats();
+  renderArray();
+  updateStatsDisplay();
+  sizeSlider.value = String(parsed.length);
+  sizeValue.textContent = String(parsed.length);
+  setStatus(`Custom array applied (${parsed.length} values).`);
 }
 
 startBtn.addEventListener('click', () => {
@@ -347,6 +388,7 @@ stepBtn.addEventListener('click', () => {
 
 resetBtn.addEventListener('click', resetToBase);
 randomizeBtn.addEventListener('click', regenerateArray);
+applyArrayBtn.addEventListener('click', applyCustomArray);
 
 sizeSlider.addEventListener('input', () => {
   sizeValue.textContent = sizeSlider.value;
@@ -368,9 +410,11 @@ algorithmSelect.addEventListener('change', () => {
   updateNote();
   setStatus('Algorithm changed. Press Start to run the new strategy.');
   renderArray();
+  updateStatsDisplay();
 });
 
 sizeValue.textContent = sizeSlider.value;
 speedValue.textContent = speedSlider.value;
 updateNote();
 regenerateArray();
+updateStatsDisplay();
