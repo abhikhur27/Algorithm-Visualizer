@@ -4,6 +4,7 @@ const sizeSlider = document.getElementById('size-slider');
 const speedSlider = document.getElementById('speed-slider');
 const customArrayInput = document.getElementById('custom-array');
 const applyArrayBtn = document.getElementById('apply-array-btn');
+const presetArrayButtons = Array.from(document.querySelectorAll('.preset-array-btn'));
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
@@ -39,6 +40,28 @@ let stats = {
 
 function randomArray(size) {
   return Array.from({ length: size }, () => Math.floor(Math.random() * 92) + 8);
+}
+
+function patternedArray(size, mode) {
+  if (mode === 'reversed') {
+    return Array.from({ length: size }, (_, index) => Math.max(4, Math.round(((size - index) / size) * 96)));
+  }
+
+  if (mode === 'few') {
+    const buckets = [15, 28, 42, 57, 72, 86];
+    return Array.from({ length: size }, () => buckets[Math.floor(Math.random() * buckets.length)]);
+  }
+
+  const sorted = Array.from({ length: size }, (_, index) => Math.max(4, Math.round(((index + 1) / size) * 96)));
+  const swaps = Math.max(1, Math.floor(size * 0.14));
+
+  for (let i = 0; i < swaps; i += 1) {
+    const a = Math.floor(Math.random() * size);
+    const b = Math.floor(Math.random() * size);
+    [sorted[a], sorted[b]] = [sorted[b], sorted[a]];
+  }
+
+  return sorted;
 }
 
 function setStatus(message) {
@@ -331,17 +354,23 @@ function resetToBase() {
   setStatus('Reset complete. Ready to run.');
 }
 
-function regenerateArray() {
+function setBaseArray(nextBase, message) {
   stopPlayback();
-  const size = Number(sizeSlider.value);
-  baseArray = randomArray(size);
-  currentArray = [...baseArray];
+  baseArray = [...nextBase];
+  currentArray = [...nextBase];
   steps = [];
   stepIndex = 0;
   resetStats();
   renderArray();
   updateStatsDisplay();
-  setStatus('New array generated.');
+  if (message) {
+    setStatus(message);
+  }
+}
+
+function regenerateArray() {
+  const size = Number(sizeSlider.value);
+  setBaseArray(randomArray(size), 'New array generated.');
 }
 
 function applyCustomArray() {
@@ -351,17 +380,21 @@ function applyCustomArray() {
     return;
   }
 
-  stopPlayback();
-  baseArray = [...parsed];
-  currentArray = [...parsed];
-  steps = [];
-  stepIndex = 0;
-  resetStats();
-  renderArray();
-  updateStatsDisplay();
+  setBaseArray(parsed);
   sizeSlider.value = String(parsed.length);
   sizeValue.textContent = String(parsed.length);
   setStatus(`Custom array applied (${parsed.length} values).`);
+}
+
+function applyShapePreset(mode) {
+  const size = Number(sizeSlider.value);
+  const next = patternedArray(size, mode);
+  const labelMap = {
+    nearly: 'Nearly sorted',
+    reversed: 'Reversed',
+    few: 'Few-unique',
+  };
+  setBaseArray(next, `${labelMap[mode] || 'Preset'} array generated (${size} values).`);
 }
 
 startBtn.addEventListener('click', () => {
@@ -389,6 +422,9 @@ stepBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', resetToBase);
 randomizeBtn.addEventListener('click', regenerateArray);
 applyArrayBtn.addEventListener('click', applyCustomArray);
+presetArrayButtons.forEach((button) => {
+  button.addEventListener('click', () => applyShapePreset(button.dataset.shape));
+});
 
 sizeSlider.addEventListener('input', () => {
   sizeValue.textContent = sizeSlider.value;
