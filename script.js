@@ -26,6 +26,7 @@ const algorithmNotes = {
   bubble: 'Bubble Sort repeatedly pushes larger values to the right. Worst-case complexity: O(n^2).',
   insertion: 'Insertion Sort builds a sorted prefix and inserts each next value at the correct position. Worst-case: O(n^2).',
   merge: 'Merge Sort recursively splits and merges ranges. Time complexity: O(n log n), extra memory required.',
+  heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
 };
 
@@ -107,7 +108,7 @@ function estimateTheoryOps() {
   const n = Math.max(1, currentArray.length);
   const nLogN = Math.round(n * Math.log2(Math.max(2, n)));
 
-  if (algorithmSelect.value === 'merge' || algorithmSelect.value === 'quick') {
+  if (algorithmSelect.value === 'merge' || algorithmSelect.value === 'quick' || algorithmSelect.value === 'heap') {
     return `~${nLogN}`;
   }
 
@@ -381,11 +382,55 @@ function quickSortSteps(values) {
   return output;
 }
 
+function heapSortSteps(values) {
+  const arr = [...values];
+  const output = [];
+
+  function heapify(length, rootIndex) {
+    let largest = rootIndex;
+    const left = rootIndex * 2 + 1;
+    const right = rootIndex * 2 + 2;
+
+    if (left < length) {
+      output.push({ type: 'compare', indices: [left, largest] });
+      if (arr[left] > arr[largest]) {
+        largest = left;
+      }
+    }
+
+    if (right < length) {
+      output.push({ type: 'compare', indices: [right, largest] });
+      if (arr[right] > arr[largest]) {
+        largest = right;
+      }
+    }
+
+    if (largest !== rootIndex) {
+      [arr[rootIndex], arr[largest]] = [arr[largest], arr[rootIndex]];
+      output.push({ type: 'swap', indices: [rootIndex, largest] });
+      heapify(length, largest);
+    }
+  }
+
+  for (let index = Math.floor(arr.length / 2) - 1; index >= 0; index -= 1) {
+    heapify(arr.length, index);
+  }
+
+  for (let end = arr.length - 1; end > 0; end -= 1) {
+    [arr[0], arr[end]] = [arr[end], arr[0]];
+    output.push({ type: 'swap', indices: [0, end] });
+    heapify(end, 0);
+  }
+
+  return output;
+}
+
 function generateSteps() {
   const algorithms = {
     bubble: bubbleSortSteps,
     insertion: insertionSortSteps,
     merge: mergeSortSteps,
+    heap: heapSortSteps,
     quick: quickSortSteps,
   };
 

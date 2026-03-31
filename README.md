@@ -4,7 +4,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 
 ## Features
 
-- Sorting algorithms: Bubble, Insertion, Merge, Quick.
+- Sorting algorithms: Bubble, Insertion, Merge, Heap, Quick.
 - Playback controls: start, pause, step, reset, randomize.
 - Adjustable array size and animation speed.
 - Operation counters:
@@ -48,6 +48,6 @@ Open `http://localhost:8000`.
 
 ## Future Improvements
 
-- Add heap sort and radix sort.
+- Add radix sort and shell sort.
 - Add operation timeline scrubber.
 - Add import/export for custom arrays.
