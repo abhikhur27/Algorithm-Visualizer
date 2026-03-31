@@ -20,6 +20,7 @@ const writesEl = document.getElementById('writes');
 const stepProgressEl = document.getElementById('step-progress');
 const theoryOpsEl = document.getElementById('theory-ops');
 const algoNote = document.getElementById('algo-note');
+const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
 
 const algorithmNotes = {
   bubble: 'Bubble Sort repeatedly pushes larger values to the right. Worst-case complexity: O(n^2).',
@@ -39,6 +40,26 @@ let stats = {
   swaps: 0,
   writes: 0,
 };
+
+function loadPersistedState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  } catch (error) {
+    return null;
+  }
+}
+
+function persistState() {
+  const payload = {
+    algorithm: algorithmSelect.value,
+    size: sizeSlider.value,
+    speed: speedSlider.value,
+    customArray: customArrayInput.value,
+    baseArray,
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
 
 function randomArray(size) {
   return Array.from({ length: size }, () => Math.floor(Math.random() * 92) + 8);
@@ -401,6 +422,7 @@ function setBaseArray(nextBase, message) {
   if (message) {
     setStatus(message);
   }
+  persistState();
 }
 
 function regenerateArray() {
@@ -419,6 +441,7 @@ function applyCustomArray() {
   sizeSlider.value = String(parsed.length);
   sizeValue.textContent = String(parsed.length);
   setStatus(`Custom array applied (${parsed.length} values).`);
+  persistState();
 }
 
 function applyShapePreset(mode) {
@@ -486,6 +509,7 @@ sizeSlider.addEventListener('input', () => {
 
 speedSlider.addEventListener('input', () => {
   speedValue.textContent = speedSlider.value;
+  persistState();
   if (isRunning) {
     clearTimer();
     timerId = window.setInterval(runOneStep, Number(speedSlider.value));
@@ -500,10 +524,25 @@ algorithmSelect.addEventListener('change', () => {
   setStatus('Algorithm changed. Press Start to run the new strategy.');
   renderArray();
   updateStatsDisplay();
+  persistState();
 });
+
+const persistedState = loadPersistedState();
+if (persistedState) {
+  if (persistedState.algorithm) algorithmSelect.value = persistedState.algorithm;
+  if (persistedState.size) sizeSlider.value = String(persistedState.size);
+  if (persistedState.speed) speedSlider.value = String(persistedState.speed);
+  if (typeof persistedState.customArray === 'string') customArrayInput.value = persistedState.customArray;
+}
 
 sizeValue.textContent = sizeSlider.value;
 speedValue.textContent = speedSlider.value;
 updateNote();
-regenerateArray();
+
+if (Array.isArray(persistedState?.baseArray) && persistedState.baseArray.length >= 5) {
+  setBaseArray(persistedState.baseArray, 'Restored your last array + control settings.');
+} else {
+  regenerateArray();
+}
+
 updateStatsDisplay();
