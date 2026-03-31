@@ -55,6 +55,7 @@
       <div class="buttons">
         <button id="apply-array-btn" type="button">Apply Array</button>
         <button id="randomize-btn" type="button">Randomize</button>
+        <button id="compare-btn" type="button">Compare All</button>
         <button id="start-btn" class="primary" type="button">Start</button>
         <button id="pause-btn" type="button">Pause</button>
         <button id="step-btn" type="button">Step</button>
@@ -99,6 +100,32 @@
       <div id="array-container" class="array-container" aria-label="Bar visualization"></div>
 
       <div class="algo-note" id="algo-note"></div>
+
+      <section class="comparison-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
+            <h2>Comparison Snapshot</h2>
+            <p>Run the current array through every implemented sorter without animation.</p>
+          </div>
+          <p id="comparison-summary" class="comparison-summary">No comparison yet.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Comparisons</th>
+                <th>Swaps</th>
+                <th>Writes</th>
+                <th>Total Ops</th>
+              </tr>
+            </thead>
+            <tbody id="comparison-body">
+              <tr><td colspan="5" class="empty-row">Use Compare All to benchmark this input.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 

@@ -5,6 +5,7 @@ const speedSlider = document.getElementById('speed-slider');
 const customArrayInput = document.getElementById('custom-array');
 const applyArrayBtn = document.getElementById('apply-array-btn');
 const presetArrayButtons = Array.from(document.querySelectorAll('.preset-array-btn'));
+const compareBtn = document.getElementById('compare-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
@@ -20,7 +21,17 @@ const writesEl = document.getElementById('writes');
 const stepProgressEl = document.getElementById('step-progress');
 const theoryOpsEl = document.getElementById('theory-ops');
 const algoNote = document.getElementById('algo-note');
+const comparisonBody = document.getElementById('comparison-body');
+const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
+
+const algorithmGenerators = {
+  bubble: bubbleSortSteps,
+  insertion: insertionSortSteps,
+  merge: mergeSortSteps,
+  heap: heapSortSteps,
+  quick: quickSortSteps,
+};
 
 const algorithmNotes = {
   bubble: 'Bubble Sort repeatedly pushes larger values to the right. Worst-case complexity: O(n^2).',
@@ -426,15 +437,7 @@ function heapSortSteps(values) {
 }
 
 function generateSteps() {
-  const algorithms = {
-    bubble: bubbleSortSteps,
-    insertion: insertionSortSteps,
-    merge: mergeSortSteps,
-    heap: heapSortSteps,
-    quick: quickSortSteps,
-  };
-
-  const generator = algorithms[algorithmSelect.value];
+  const generator = algorithmGenerators[algorithmSelect.value];
   if (!generator) {
     throw new Error('Unknown algorithm selected.');
   }
@@ -442,6 +445,63 @@ function generateSteps() {
   steps = generator(currentArray);
   stepIndex = 0;
   resetStats();
+}
+
+function summarizeOperations(stepList) {
+  const summary = { comparisons: 0, swaps: 0, writes: 0, total: stepList.length };
+
+  stepList.forEach((step) => {
+    if (step.type === 'compare') summary.comparisons += 1;
+    if (step.type === 'swap') summary.swaps += 1;
+    if (step.type === 'overwrite') summary.writes += 1;
+  });
+
+  return summary;
+}
+
+function renderComparisonRows(rows) {
+  if (!comparisonBody) return;
+
+  comparisonBody.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.label}</td>
+          <td>${row.comparisons}</td>
+          <td>${row.swaps}</td>
+          <td>${row.writes}</td>
+          <td>${row.total}</td>
+        </tr>
+      `
+    )
+    .join('');
+}
+
+function compareAlgorithms() {
+  if (!baseArray.length) {
+    setStatus('Generate or apply an array before comparing algorithms.');
+    return;
+  }
+
+  const rows = Object.entries(algorithmGenerators).map(([key, generator]) => {
+    const summary = summarizeOperations(generator(baseArray));
+    return {
+      key,
+      label: algorithmSelect.querySelector(`option[value="${key}"]`)?.textContent || key,
+      ...summary,
+    };
+  });
+
+  rows.sort((a, b) => a.total - b.total || a.comparisons - b.comparisons);
+  renderComparisonRows(rows);
+
+  if (comparisonSummary) {
+    const best = rows[0];
+    const worst = rows[rows.length - 1];
+    comparisonSummary.textContent = `${best.label} is lightest on this input; ${worst.label} does the most work.`;
+  }
+
+  setStatus('Compared all algorithms on the current array.');
 }
 
 function resetToBase() {
@@ -541,6 +601,7 @@ backBtn.addEventListener('click', () => {
 });
 
 resetBtn.addEventListener('click', resetToBase);
+compareBtn?.addEventListener('click', compareAlgorithms);
 randomizeBtn.addEventListener('click', regenerateArray);
 applyArrayBtn.addEventListener('click', applyCustomArray);
 presetArrayButtons.forEach((button) => {
