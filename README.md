@@ -7,6 +7,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Sorting algorithms: Bubble, Insertion, Merge, Heap, Quick.
 - Playback controls: start, pause, step, reset, randomize.
 - Adjustable array size and animation speed.
+- Import/export arrays as JSON, CSV, or plain text for reproducible benchmarks.
 - One-click comparison snapshot across all implemented sorting algorithms.
 - Operation counters:
   - Comparisons
@@ -50,4 +51,4 @@ Open `http://localhost:8000`.
 ## Future Improvements
 
 - Add radix sort and shell sort.
-- Add import/export for custom arrays.
+- Add comparison history across multiple imported workloads.

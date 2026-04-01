@@ -6,6 +6,9 @@ const customArrayInput = document.getElementById('custom-array');
 const applyArrayBtn = document.getElementById('apply-array-btn');
 const presetArrayButtons = Array.from(document.querySelectorAll('.preset-array-btn'));
 const compareBtn = document.getElementById('compare-btn');
+const exportArrayBtn = document.getElementById('export-array-btn');
+const importArrayBtn = document.getElementById('import-array-btn');
+const importArrayFile = document.getElementById('import-array-file');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
@@ -560,6 +563,73 @@ function applyShapePreset(mode) {
   setBaseArray(next, `${labelMap[mode] || 'Preset'} array generated (${size} values).`);
 }
 
+function exportArray() {
+  if (!baseArray.length) {
+    setStatus('Generate or import an array before exporting.');
+    return;
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    algorithm: algorithmSelect.value,
+    array: baseArray,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `algorithm-visualizer-array-${baseArray.length}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  setStatus(`Exported current array (${baseArray.length} values).`);
+}
+
+function parseImportedArray(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed.array)) return parsed.array;
+  } catch (error) {
+    // Fall through to comma/newline parsing.
+  }
+
+  return trimmed
+    .split(/[\s,]+/)
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => Number.isInteger(value));
+}
+
+function importArray(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const values = parseImportedArray(String(reader.result || ''));
+      if (!Array.isArray(values) || values.length < 5 || values.length > 120) {
+        throw new Error('Array length must be between 5 and 120 values.');
+      }
+
+      const normalized = values.map((value) => Math.max(4, Math.min(100, value)));
+      customArrayInput.value = normalized.join(', ');
+      sizeSlider.value = String(normalized.length);
+      sizeValue.textContent = String(normalized.length);
+      setBaseArray(normalized, `Imported array (${normalized.length} values). Values were clamped to the visual range when needed.`);
+    } catch (error) {
+      setStatus('Could not import that file. Use JSON, CSV, or plain text with 5-120 integers.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 startBtn.addEventListener('click', () => {
   if (!steps.length || stepIndex >= steps.length) {
     generateSteps();
@@ -602,6 +672,9 @@ backBtn.addEventListener('click', () => {
 
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
+exportArrayBtn?.addEventListener('click', exportArray);
+importArrayBtn?.addEventListener('click', () => importArrayFile?.click());
+importArrayFile?.addEventListener('change', importArray);
 randomizeBtn.addEventListener('click', regenerateArray);
 applyArrayBtn.addEventListener('click', applyCustomArray);
 presetArrayButtons.forEach((button) => {
