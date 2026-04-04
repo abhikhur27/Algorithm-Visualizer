@@ -4,7 +4,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 
 ## Features
 
-- Sorting algorithms: Bubble, Insertion, Merge, Heap, Quick.
+- Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick.
 - Playback controls: start, pause, step, reset, randomize.
 - Adjustable array size and animation speed.
 - Import/export arrays as JSON, CSV, or plain text for reproducible benchmarks.

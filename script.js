@@ -37,6 +37,7 @@ const algorithmGenerators = {
   bubble: bubbleSortSteps,
   insertion: insertionSortSteps,
   merge: mergeSortSteps,
+  shell: shellSortSteps,
   heap: heapSortSteps,
   quick: quickSortSteps,
 };
@@ -45,6 +46,7 @@ const algorithmNotes = {
   bubble: 'Bubble Sort repeatedly pushes larger values to the right. Worst-case complexity: O(n^2).',
   insertion: 'Insertion Sort builds a sorted prefix and inserts each next value at the correct position. Worst-case: O(n^2).',
   merge: 'Merge Sort recursively splits and merges ranges. Time complexity: O(n log n), extra memory required.',
+  shell: 'Shell Sort performs gapped insertion passes, making nearly sorted arrays converge much faster than plain insertion sort.',
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
 };
@@ -166,7 +168,7 @@ function estimateTheoryOps() {
   const n = Math.max(1, currentArray.length);
   const nLogN = Math.round(n * Math.log2(Math.max(2, n)));
 
-  if (algorithmSelect.value === 'merge' || algorithmSelect.value === 'quick' || algorithmSelect.value === 'heap') {
+  if (['merge', 'quick', 'heap', 'shell'].includes(algorithmSelect.value)) {
     return `~${nLogN}`;
   }
 
@@ -398,6 +400,34 @@ function mergeSortSteps(values) {
   }
 
   divide(0, arr.length - 1);
+  return output;
+}
+
+function shellSortSteps(values) {
+  const arr = [...values];
+  const output = [];
+
+  for (let gap = Math.floor(arr.length / 2); gap > 0; gap = Math.floor(gap / 2)) {
+    for (let i = gap; i < arr.length; i += 1) {
+      const value = arr[i];
+      let j = i;
+
+      while (j >= gap) {
+        output.push({ type: 'compare', indices: [j - gap, j] });
+        if (arr[j - gap] <= value) break;
+
+        arr[j] = arr[j - gap];
+        output.push({ type: 'overwrite', index: j, value: arr[j - gap] });
+        j -= gap;
+      }
+
+      if (arr[j] !== value) {
+        arr[j] = value;
+        output.push({ type: 'overwrite', index: j, value });
+      }
+    }
+  }
+
   return output;
 }
 
