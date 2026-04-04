@@ -24,6 +24,11 @@ const writesEl = document.getElementById('writes');
 const stepProgressEl = document.getElementById('step-progress');
 const theoryOpsEl = document.getElementById('theory-ops');
 const algoNote = document.getElementById('algo-note');
+const diagnosticSortednessEl = document.getElementById('diagnostic-sortedness');
+const diagnosticDuplicatesEl = document.getElementById('diagnostic-duplicates');
+const diagnosticSpreadEl = document.getElementById('diagnostic-spread');
+const diagnosticInversionsEl = document.getElementById('diagnostic-inversions');
+const diagnosticRecommendationEl = document.getElementById('diagnostic-recommendation');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
@@ -116,6 +121,45 @@ function updateStatsDisplay() {
   writesEl.textContent = String(stats.writes);
   stepProgressEl.textContent = `${Math.min(stepIndex, steps.length)} / ${steps.length}`;
   theoryOpsEl.textContent = estimateTheoryOps();
+}
+
+function updateDiagnostics() {
+  if (!baseArray.length) return;
+
+  const pairCount = Math.max(1, (baseArray.length * (baseArray.length - 1)) / 2);
+  let inversions = 0;
+  for (let i = 0; i < baseArray.length; i += 1) {
+    for (let j = i + 1; j < baseArray.length; j += 1) {
+      if (baseArray[i] > baseArray[j]) inversions += 1;
+    }
+  }
+
+  let adjacentSorted = 0;
+  for (let i = 1; i < baseArray.length; i += 1) {
+    if (baseArray[i] >= baseArray[i - 1]) adjacentSorted += 1;
+  }
+
+  const uniqueCount = new Set(baseArray).size;
+  const duplicateRate = Math.round(((baseArray.length - uniqueCount) / Math.max(1, baseArray.length)) * 100);
+  const spread = `${Math.min(...baseArray)}-${Math.max(...baseArray)}`;
+  const inversionRatio = inversions / pairCount;
+  const sortedness = Math.round((adjacentSorted / Math.max(1, baseArray.length - 1)) * 100);
+
+  diagnosticSortednessEl.textContent = `${sortedness}%`;
+  diagnosticDuplicatesEl.textContent = `${duplicateRate}%`;
+  diagnosticSpreadEl.textContent = spread;
+  diagnosticInversionsEl.textContent = `${Math.round(inversionRatio * 100)}%`;
+
+  let recommendation = 'Quick Sort is a strong default when the input has no clear structural bias.';
+  if (sortedness >= 82) {
+    recommendation = 'Recommendation: Insertion Sort should stay competitive here because the array is already mostly ordered.';
+  } else if (duplicateRate >= 35) {
+    recommendation = 'Recommendation: Merge Sort is the safer benchmark here because duplicate-heavy inputs can make partition-based runs look noisy.';
+  } else if (inversionRatio >= 0.72) {
+    recommendation = 'Recommendation: Heap Sort is a solid baseline for this disorder-heavy workload.';
+  }
+
+  diagnosticRecommendationEl.textContent = recommendation;
 }
 
 function estimateTheoryOps() {
@@ -526,6 +570,7 @@ function setBaseArray(nextBase, message) {
   stepIndex = 0;
   resetStats();
   renderArray();
+  updateDiagnostics();
   updateStatsDisplay();
   if (message) {
     setStatus(message);

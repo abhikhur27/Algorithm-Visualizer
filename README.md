@@ -9,6 +9,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Adjustable array size and animation speed.
 - Import/export arrays as JSON, CSV, or plain text for reproducible benchmarks.
 - One-click comparison snapshot across all implemented sorting algorithms.
+- Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Operation counters:
   - Comparisons
   - Swaps

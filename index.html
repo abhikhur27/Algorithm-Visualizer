@@ -104,6 +104,34 @@
 
       <div class="algo-note" id="algo-note"></div>
 
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
+            <h2>Workload Diagnostics</h2>
+            <p>Read how the current input is shaped before you benchmark it.</p>
+          </div>
+          <p id="diagnostic-recommendation" class="comparison-summary">Generate an array to inspect its workload shape.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Sortedness</h3>
+            <p id="diagnostic-sortedness">-</p>
+          </article>
+          <article>
+            <h3>Duplicate Rate</h3>
+            <p id="diagnostic-duplicates">-</p>
+          </article>
+          <article>
+            <h3>Value Spread</h3>
+            <p id="diagnostic-spread">-</p>
+          </article>
+          <article>
+            <h3>Inversions</h3>
+            <p id="diagnostic-inversions">-</p>
+          </article>
+        </div>
+      </section>
+
       <section class="comparison-panel" aria-live="polite">
         <div class="comparison-head">
           <div>

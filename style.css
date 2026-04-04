@@ -259,6 +259,40 @@ button:disabled {
   padding: 0.8rem;
 }
 
+.diagnostics-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 13, 28, 0.55);
+  padding: 0.8rem;
+}
+
+.diagnostics-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.diagnostics-grid article {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem;
+}
+
+.diagnostics-grid h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.diagnostics-grid p {
+  margin: 0.25rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
 .comparison-head {
   display: flex;
   justify-content: space-between;
@@ -326,6 +360,10 @@ td {
   }
 
   .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .diagnostics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
