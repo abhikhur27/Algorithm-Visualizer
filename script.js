@@ -40,6 +40,7 @@ const algorithmGenerators = {
   shell: shellSortSteps,
   heap: heapSortSteps,
   quick: quickSortSteps,
+  radix: radixSortSteps,
 };
 
 const algorithmNotes = {
@@ -49,6 +50,7 @@ const algorithmNotes = {
   shell: 'Shell Sort performs gapped insertion passes, making nearly sorted arrays converge much faster than plain insertion sort.',
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
+  radix: 'Radix Sort groups values by digit from least-significant to most-significant place. It shines when keys are bounded non-negative integers.',
 };
 
 let baseArray = [];
@@ -170,6 +172,10 @@ function estimateTheoryOps() {
 
   if (['merge', 'quick', 'heap', 'shell'].includes(algorithmSelect.value)) {
     return `~${nLogN}`;
+  }
+
+  if (algorithmSelect.value === 'radix') {
+    return `~${n * 2}`;
   }
 
   return `~${n * n}`;
@@ -508,6 +514,33 @@ function heapSortSteps(values) {
     [arr[0], arr[end]] = [arr[end], arr[0]];
     output.push({ type: 'swap', indices: [0, end] });
     heapify(end, 0);
+  }
+
+  return output;
+}
+
+function radixSortSteps(values) {
+  const arr = [...values];
+  const output = [];
+  const maxValue = Math.max(0, ...arr);
+
+  for (let exp = 1; Math.floor(maxValue / exp) > 0; exp *= 10) {
+    const buckets = Array.from({ length: 10 }, () => []);
+
+    arr.forEach((value, index) => {
+      output.push({ type: 'compare', indices: [index, index] });
+      const digit = Math.floor(value / exp) % 10;
+      buckets[digit].push(value);
+    });
+
+    let writeIndex = 0;
+    buckets.forEach((bucket) => {
+      bucket.forEach((value) => {
+        arr[writeIndex] = value;
+        output.push({ type: 'overwrite', index: writeIndex, value });
+        writeIndex += 1;
+      });
+    });
   }
 
   return output;
