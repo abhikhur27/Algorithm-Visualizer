@@ -29,6 +29,11 @@ const diagnosticDuplicatesEl = document.getElementById('diagnostic-duplicates');
 const diagnosticSpreadEl = document.getElementById('diagnostic-spread');
 const diagnosticInversionsEl = document.getElementById('diagnostic-inversions');
 const diagnosticRecommendationEl = document.getElementById('diagnostic-recommendation');
+const profileTimeEl = document.getElementById('profile-time');
+const profileMemoryEl = document.getElementById('profile-memory');
+const profileStabilityEl = document.getElementById('profile-stability');
+const profileSweetSpotEl = document.getElementById('profile-sweet-spot');
+const profileFitEl = document.getElementById('profile-fit');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
@@ -51,6 +56,16 @@ const algorithmNotes = {
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
   radix: 'Radix Sort groups values by digit from least-significant to most-significant place. It shines when keys are bounded non-negative integers.',
+};
+
+const algorithmProfiles = {
+  bubble: { time: 'O(n^2)', memory: 'O(1)', stability: 'Yes', sweetSpot: 'Teaching pairwise swaps and very small arrays.' },
+  insertion: { time: 'O(n^2) worst, O(n) near-sorted', memory: 'O(1)', stability: 'Yes', sweetSpot: 'Arrays that are already mostly in order.' },
+  merge: { time: 'O(n log n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Consistent benchmarking when duplicates matter.' },
+  shell: { time: 'Gap-dependent, usually sub-quadratic', memory: 'O(1)', stability: 'No', sweetSpot: 'Medium arrays that need an in-place speedup over insertion sort.' },
+  heap: { time: 'O(n log n)', memory: 'O(1)', stability: 'No', sweetSpot: 'Disorder-heavy arrays where worst-case guarantees matter.' },
+  quick: { time: 'O(n log n) average', memory: 'O(log n) stack', stability: 'No', sweetSpot: 'General-purpose random-looking inputs.' },
+  radix: { time: 'O(d * n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Bounded non-negative integers with many repeated digits.' },
 };
 
 let baseArray = [];
@@ -164,6 +179,33 @@ function updateDiagnostics() {
   }
 
   diagnosticRecommendationEl.textContent = recommendation;
+  updateAlgorithmProfile({ sortedness, duplicateRate, inversionRatio });
+}
+
+function updateAlgorithmProfile(metrics = null) {
+  const profile = algorithmProfiles[algorithmSelect.value];
+  if (!profile || !profileTimeEl || !profileFitEl) return;
+
+  profileTimeEl.textContent = profile.time;
+  profileMemoryEl.textContent = profile.memory;
+  profileStabilityEl.textContent = profile.stability;
+  profileSweetSpotEl.textContent = profile.sweetSpot;
+
+  const insight = metrics || {};
+  let fit = `${algorithmSelect.options[algorithmSelect.selectedIndex].text} is a reasonable baseline on the current workload.`;
+  if (algorithmSelect.value === 'insertion' && (insight.sortedness ?? 0) >= 80) {
+    fit = 'Fit: high. The current array is already ordered enough that insertion sort should stay competitive.';
+  } else if (algorithmSelect.value === 'merge' && (insight.duplicateRate ?? 0) >= 30) {
+    fit = 'Fit: high. Stable merging keeps duplicate-heavy workloads easier to reason about.';
+  } else if (algorithmSelect.value === 'heap' && (insight.inversionRatio ?? 0) >= 0.65) {
+    fit = 'Fit: high. This workload is disorder-heavy, so heap sort offers a clean worst-case baseline.';
+  } else if (algorithmSelect.value === 'radix' && (insight.duplicateRate ?? 0) >= 20) {
+    fit = 'Fit: medium-high. Repeated bounded integers make radix passes easier to justify.';
+  } else if (algorithmSelect.value === 'bubble' && baseArray.length > 24) {
+    fit = 'Fit: low. This array is large enough that bubble sort is mainly useful as a teaching contrast.';
+  }
+
+  profileFitEl.textContent = fit;
 }
 
 function estimateTheoryOps() {
@@ -634,6 +676,7 @@ function setBaseArray(nextBase, message) {
   resetStats();
   renderArray();
   updateDiagnostics();
+  updateAlgorithmProfile();
   updateStatsDisplay();
   if (message) {
     setStatus(message);
@@ -808,6 +851,7 @@ algorithmSelect.addEventListener('change', () => {
   steps = [];
   stepIndex = 0;
   updateNote();
+  updateAlgorithmProfile();
   setStatus('Algorithm changed. Press Start to run the new strategy.');
   renderArray();
   updateStatsDisplay();
