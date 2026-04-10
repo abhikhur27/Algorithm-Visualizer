@@ -34,6 +34,11 @@ const profileMemoryEl = document.getElementById('profile-memory');
 const profileStabilityEl = document.getElementById('profile-stability');
 const profileSweetSpotEl = document.getElementById('profile-sweet-spot');
 const profileFitEl = document.getElementById('profile-fit');
+const fingerprintRunsEl = document.getElementById('fingerprint-runs');
+const fingerprintJumpEl = document.getElementById('fingerprint-jump');
+const fingerprintMedianEl = document.getElementById('fingerprint-median');
+const fingerprintUniqueEl = document.getElementById('fingerprint-unique');
+const fingerprintSummaryEl = document.getElementById('fingerprint-summary');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
@@ -163,11 +168,29 @@ function updateDiagnostics() {
   const spread = `${Math.min(...baseArray)}-${Math.max(...baseArray)}`;
   const inversionRatio = inversions / pairCount;
   const sortedness = Math.round((adjacentSorted / Math.max(1, baseArray.length - 1)) * 100);
+  const monotonicRuns = baseArray.reduce((count, value, index, values) => {
+    if (index === 0) return 1;
+    return value < values[index - 1] ? count + 1 : count;
+  }, 0);
+  const largestJump = baseArray.reduce((maxJump, value, index, values) => {
+    if (index === 0) return 0;
+    return Math.max(maxJump, Math.abs(value - values[index - 1]));
+  }, 0);
+  const sortedValues = [...baseArray].sort((a, b) => a - b);
+  const medianIndex = Math.floor(sortedValues.length / 2);
+  const median =
+    sortedValues.length % 2 === 0
+      ? ((sortedValues[medianIndex - 1] + sortedValues[medianIndex]) / 2).toFixed(1)
+      : String(sortedValues[medianIndex]);
 
   diagnosticSortednessEl.textContent = `${sortedness}%`;
   diagnosticDuplicatesEl.textContent = `${duplicateRate}%`;
   diagnosticSpreadEl.textContent = spread;
   diagnosticInversionsEl.textContent = `${Math.round(inversionRatio * 100)}%`;
+  fingerprintRunsEl.textContent = String(monotonicRuns);
+  fingerprintJumpEl.textContent = String(largestJump);
+  fingerprintMedianEl.textContent = median;
+  fingerprintUniqueEl.textContent = `${uniqueCount}/${baseArray.length}`;
 
   let recommendation = 'Quick Sort is a strong default when the input has no clear structural bias.';
   if (sortedness >= 82) {
@@ -179,6 +202,7 @@ function updateDiagnostics() {
   }
 
   diagnosticRecommendationEl.textContent = recommendation;
+  fingerprintSummaryEl.textContent = `This array has ${monotonicRuns} monotonic run${monotonicRuns === 1 ? '' : 's'}, a largest adjacent jump of ${largestJump}, and ${uniqueCount} unique value${uniqueCount === 1 ? '' : 's'}.`;
   updateAlgorithmProfile({ sortedness, duplicateRate, inversionRatio });
 }
 

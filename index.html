@@ -162,6 +162,34 @@
         </div>
       </section>
 
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
+            <h2>Array Fingerprint</h2>
+            <p>Turn the current workload into a compact profile before comparing raw operation counts.</p>
+          </div>
+          <p id="fingerprint-summary" class="comparison-summary">Generate an array to compute its local shape signals.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Monotonic Runs</h3>
+            <p id="fingerprint-runs">-</p>
+          </article>
+          <article>
+            <h3>Largest Jump</h3>
+            <p id="fingerprint-jump">-</p>
+          </article>
+          <article>
+            <h3>Median</h3>
+            <p id="fingerprint-median">-</p>
+          </article>
+          <article>
+            <h3>Unique Values</h3>
+            <p id="fingerprint-unique">-</p>
+          </article>
+        </div>
+      </section>
+
       <section class="comparison-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
