@@ -190,6 +190,34 @@
         </div>
       </section>
 
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
+            <h2>Operation Lens</h2>
+            <p>Translate the current replay step into a human-readable algorithm move.</p>
+          </div>
+          <p id="operation-summary" class="comparison-summary">Generate an array to inspect the operation mix.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Current Step</h3>
+            <p id="operation-current">-</p>
+          </article>
+          <article>
+            <h3>Compare Share</h3>
+            <p id="operation-compare-share">-</p>
+          </article>
+          <article>
+            <h3>Swap Share</h3>
+            <p id="operation-swap-share">-</p>
+          </article>
+          <article>
+            <h3>Write Share</h3>
+            <p id="operation-write-share">-</p>
+          </article>
+        </div>
+      </section>
+
       <section class="comparison-panel" aria-live="polite">
         <div class="comparison-head">
           <div>

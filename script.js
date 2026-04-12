@@ -39,6 +39,11 @@ const fingerprintJumpEl = document.getElementById('fingerprint-jump');
 const fingerprintMedianEl = document.getElementById('fingerprint-median');
 const fingerprintUniqueEl = document.getElementById('fingerprint-unique');
 const fingerprintSummaryEl = document.getElementById('fingerprint-summary');
+const operationSummaryEl = document.getElementById('operation-summary');
+const operationCurrentEl = document.getElementById('operation-current');
+const operationCompareShareEl = document.getElementById('operation-compare-share');
+const operationSwapShareEl = document.getElementById('operation-swap-share');
+const operationWriteShareEl = document.getElementById('operation-write-share');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
@@ -290,6 +295,7 @@ function finishPlayback() {
   stopPlayback();
   renderArray({ done: true });
   setStatus(`Completed in ${stepIndex} steps.`);
+  updateOperationLens();
 }
 
 function applyStep(step) {
@@ -314,6 +320,40 @@ function applyStep(step) {
     stats.writes += 1;
     renderArray({ swap: [step.index] });
   }
+}
+
+function stepShare(count, total) {
+  if (!total) return '0%';
+  return `${Math.round((count / total) * 100)}%`;
+}
+
+function describeStep(step, index) {
+  if (!step) {
+    if (!steps.length) return 'Generate an array to inspect the upcoming operation flow.';
+    if (index >= steps.length) return 'Replay complete. The array is now sorted.';
+    return 'Ready to start replay.';
+  }
+
+  if (step.type === 'compare') {
+    return `Comparing bars ${step.indices[0] + 1} and ${step.indices[1] + 1} to decide local order.`;
+  }
+
+  if (step.type === 'swap') {
+    return `Swapping bars ${step.indices[0] + 1} and ${step.indices[1] + 1} because the current ordering is invalid.`;
+  }
+
+  return `Writing value ${step.value} into slot ${step.index + 1} as the algorithm rebuilds a sorted region.`;
+}
+
+function updateOperationLens() {
+  const summary = summarizeOperations(steps);
+  operationSummaryEl.textContent = summary.total
+    ? `${summary.total} replayable operations are queued for this run.`
+    : 'Generate an array to inspect the operation mix.';
+  operationCurrentEl.textContent = describeStep(steps[stepIndex] || null, stepIndex);
+  operationCompareShareEl.textContent = stepShare(summary.comparisons, summary.total);
+  operationSwapShareEl.textContent = stepShare(summary.swaps, summary.total);
+  operationWriteShareEl.textContent = stepShare(summary.writes, summary.total);
 }
 
 function rebuildToStep(targetStep) {
@@ -347,6 +387,7 @@ function runOneStep() {
   applyStep(step);
   stepIndex += 1;
   updateStatsDisplay();
+  updateOperationLens();
 
   if (stepIndex >= steps.length) {
     finishPlayback();
@@ -621,6 +662,7 @@ function generateSteps() {
   steps = generator(currentArray);
   stepIndex = 0;
   resetStats();
+  updateOperationLens();
 }
 
 function summarizeOperations(stepList) {
@@ -688,6 +730,7 @@ function resetToBase() {
   resetStats();
   renderArray();
   updateStatsDisplay();
+  updateOperationLens();
   setStatus('Reset complete. Ready to run.');
 }
 
@@ -702,6 +745,7 @@ function setBaseArray(nextBase, message) {
   updateDiagnostics();
   updateAlgorithmProfile();
   updateStatsDisplay();
+  updateOperationLens();
   if (message) {
     setStatus(message);
   }
@@ -842,6 +886,7 @@ backBtn.addEventListener('click', () => {
   rebuildToStep(stepIndex);
   renderArray();
   updateStatsDisplay();
+  updateOperationLens();
   setStatus(`Moved back to ${stepIndex}/${steps.length}.`);
 });
 
