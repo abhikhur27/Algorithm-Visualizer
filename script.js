@@ -44,6 +44,11 @@ const operationCurrentEl = document.getElementById('operation-current');
 const operationCompareShareEl = document.getElementById('operation-compare-share');
 const operationSwapShareEl = document.getElementById('operation-swap-share');
 const operationWriteShareEl = document.getElementById('operation-write-share');
+const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
+const benchmarkFastestEl = document.getElementById('benchmark-fastest');
+const benchmarkGapEl = document.getElementById('benchmark-gap');
+const benchmarkStableEl = document.getElementById('benchmark-stable');
+const benchmarkCoachEl = document.getElementById('benchmark-coach');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
@@ -695,6 +700,38 @@ function renderComparisonRows(rows) {
     .join('');
 }
 
+function updateBenchmarkVerdict(rows = []) {
+  if (!benchmarkVerdictEl || !benchmarkFastestEl || !benchmarkGapEl || !benchmarkStableEl || !benchmarkCoachEl) return;
+
+  if (!rows.length) {
+    benchmarkVerdictEl.textContent = 'Run Compare All to see which sorter best fits this workload.';
+    benchmarkFastestEl.textContent = '-';
+    benchmarkGapEl.textContent = '-';
+    benchmarkStableEl.textContent = '-';
+    benchmarkCoachEl.textContent = '-';
+    return;
+  }
+
+  const best = rows[0];
+  const worst = rows[rows.length - 1];
+  const stablePick = rows.find((row) => algorithmProfiles[row.key]?.stability === 'Yes') || best;
+  const gap = worst.total - best.total;
+  const gapPct = worst.total ? Math.round((gap / worst.total) * 100) : 0;
+
+  benchmarkVerdictEl.textContent = `${best.label} leads this workload by ${gap} operations over ${worst.label}.`;
+  benchmarkFastestEl.textContent = best.label;
+  benchmarkGapEl.textContent = `${gap} ops (${gapPct}%)`;
+  benchmarkStableEl.textContent = stablePick.label;
+
+  if (best.key === stablePick.key) {
+    benchmarkCoachEl.textContent = 'The leading algorithm is also stable, so duplicate-heavy data should stay readable.';
+  } else if (stablePick.total - best.total <= Math.max(12, best.total * 0.15)) {
+    benchmarkCoachEl.textContent = `${stablePick.label} is close behind and may be the better teaching baseline when stability matters.`;
+  } else {
+    benchmarkCoachEl.textContent = `${best.label} is the clear efficiency winner, while ${stablePick.label} remains the safer stable reference point.`;
+  }
+}
+
 function compareAlgorithms() {
   if (!baseArray.length) {
     setStatus('Generate or apply an array before comparing algorithms.');
@@ -712,6 +749,7 @@ function compareAlgorithms() {
 
   rows.sort((a, b) => a.total - b.total || a.comparisons - b.comparisons);
   renderComparisonRows(rows);
+  updateBenchmarkVerdict(rows);
 
   if (comparisonSummary) {
     const best = rows[0];
@@ -731,6 +769,7 @@ function resetToBase() {
   renderArray();
   updateStatsDisplay();
   updateOperationLens();
+  updateBenchmarkVerdict();
   setStatus('Reset complete. Ready to run.');
 }
 
@@ -746,6 +785,7 @@ function setBaseArray(nextBase, message) {
   updateAlgorithmProfile();
   updateStatsDisplay();
   updateOperationLens();
+  updateBenchmarkVerdict();
   if (message) {
     setStatus(message);
   }
