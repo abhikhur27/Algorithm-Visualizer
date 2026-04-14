@@ -6,6 +6,7 @@ const customArrayInput = document.getElementById('custom-array');
 const applyArrayBtn = document.getElementById('apply-array-btn');
 const presetArrayButtons = Array.from(document.querySelectorAll('.preset-array-btn'));
 const compareBtn = document.getElementById('compare-btn');
+const shareArrayBtn = document.getElementById('share-array-btn');
 const exportArrayBtn = document.getElementById('export-array-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
@@ -113,6 +114,61 @@ function persistState() {
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function syncUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  params.set('algorithm', algorithmSelect.value);
+  params.set('size', sizeSlider.value);
+  params.set('speed', speedSlider.value);
+
+  const customArray = customArrayInput.value.trim();
+  if (customArray) {
+    params.set('custom', customArray);
+  } else {
+    params.delete('custom');
+  }
+
+  if (baseArray.length) {
+    params.set('array', baseArray.join(','));
+  } else {
+    params.delete('array');
+  }
+
+  const nextUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', nextUrl);
+}
+
+function hydrateFromUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  if (![...params.keys()].length) return null;
+
+  const algorithm = params.get('algorithm');
+  if (algorithm && algorithmGenerators[algorithm]) {
+    algorithmSelect.value = algorithm;
+  }
+
+  const nextSize = Number.parseInt(params.get('size') || '', 10);
+  if (Number.isInteger(nextSize) && nextSize >= 10 && nextSize <= 80) {
+    sizeSlider.value = String(nextSize);
+  }
+
+  const nextSpeed = Number.parseInt(params.get('speed') || '', 10);
+  if (Number.isInteger(nextSpeed) && nextSpeed >= 20 && nextSpeed <= 300) {
+    speedSlider.value = String(nextSpeed);
+  }
+
+  const custom = params.get('custom');
+  if (typeof custom === 'string') {
+    customArrayInput.value = custom;
+  }
+
+  const sharedArray = parseImportedArray(params.get('array') || '');
+  if (Array.isArray(sharedArray) && sharedArray.length >= 5 && sharedArray.length <= 120) {
+    return sharedArray.map((value) => Math.max(4, Math.min(100, value)));
+  }
+
+  return null;
 }
 
 function randomArray(size) {
@@ -790,6 +846,7 @@ function setBaseArray(nextBase, message) {
     setStatus(message);
   }
   persistState();
+  syncUrlState();
 }
 
 function regenerateArray() {
@@ -933,6 +990,15 @@ backBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
 exportArrayBtn?.addEventListener('click', exportArray);
+shareArrayBtn?.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    setStatus('Share link copied with the current algorithm, controls, and array.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
 importArrayBtn?.addEventListener('click', () => importArrayFile?.click());
 importArrayFile?.addEventListener('change', importArray);
 randomizeBtn.addEventListener('click', regenerateArray);
@@ -974,12 +1040,18 @@ if (persistedState) {
   if (persistedState.speed) speedSlider.value = String(persistedState.speed);
   if (typeof persistedState.customArray === 'string') customArrayInput.value = persistedState.customArray;
 }
+const sharedArray = hydrateFromUrlState();
 
 sizeValue.textContent = sizeSlider.value;
 speedValue.textContent = speedSlider.value;
 updateNote();
 
-if (Array.isArray(persistedState?.baseArray) && persistedState.baseArray.length >= 5) {
+if (Array.isArray(sharedArray) && sharedArray.length >= 5) {
+  sizeSlider.value = String(sharedArray.length);
+  sizeValue.textContent = String(sharedArray.length);
+  customArrayInput.value = sharedArray.join(', ');
+  setBaseArray(sharedArray, 'Loaded shared workload from the URL.');
+} else if (Array.isArray(persistedState?.baseArray) && persistedState.baseArray.length >= 5) {
   setBaseArray(persistedState.baseArray, 'Restored your last array + control settings.');
 } else {
   regenerateArray();
