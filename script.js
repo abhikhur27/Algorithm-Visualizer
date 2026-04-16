@@ -8,6 +8,7 @@ const presetArrayButtons = Array.from(document.querySelectorAll('.preset-array-b
 const compareBtn = document.getElementById('compare-btn');
 const shareArrayBtn = document.getElementById('share-array-btn');
 const exportArrayBtn = document.getElementById('export-array-btn');
+const exportCompareBtn = document.getElementById('export-compare-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
 const sizeValue = document.getElementById('size-value');
@@ -90,6 +91,7 @@ let steps = [];
 let stepIndex = 0;
 let timerId = null;
 let isRunning = false;
+let lastComparisonRows = [];
 let stats = {
   comparisons: 0,
   swaps: 0,
@@ -804,6 +806,7 @@ function compareAlgorithms() {
   });
 
   rows.sort((a, b) => a.total - b.total || a.comparisons - b.comparisons);
+  lastComparisonRows = rows.map((row) => ({ ...row }));
   renderComparisonRows(rows);
   updateBenchmarkVerdict(rows);
 
@@ -816,11 +819,33 @@ function compareAlgorithms() {
   setStatus('Compared all algorithms on the current array.');
 }
 
+function exportComparisonCsv() {
+  if (!lastComparisonRows.length) {
+    setStatus('Run Compare All before exporting the benchmark snapshot.');
+    return;
+  }
+
+  const lines = [
+    ['algorithm', 'comparisons', 'swaps', 'writes', 'total_operations'].join(','),
+    ...lastComparisonRows.map((row) => [row.label, row.comparisons, row.swaps, row.writes, row.total].join(',')),
+  ];
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'algorithm-visualizer-compare.csv';
+  anchor.click();
+  URL.revokeObjectURL(url);
+  setStatus('Exported compare-all snapshot as CSV.');
+}
+
 function resetToBase() {
   stopPlayback();
   currentArray = [...baseArray];
   steps = [];
   stepIndex = 0;
+  lastComparisonRows = [];
   resetStats();
   renderArray();
   updateStatsDisplay();
@@ -990,6 +1015,7 @@ backBtn.addEventListener('click', () => {
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
 exportArrayBtn?.addEventListener('click', exportArray);
+exportCompareBtn?.addEventListener('click', exportComparisonCsv);
 shareArrayBtn?.addEventListener('click', async () => {
   syncUrlState();
   try {
