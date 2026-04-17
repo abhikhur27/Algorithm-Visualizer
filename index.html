@@ -71,6 +71,11 @@
       <input id="import-array-file" type="file" accept=".json,.txt,.csv,application/json,text/plain" hidden>
 
       <p id="status-text" class="status" aria-live="polite">Ready. Generate an array and start sorting.</p>
+
+      <label class="scrubber" for="step-scrubber">
+        Step Scrubber: <span id="scrubber-value">0 / 0</span>
+        <input id="step-scrubber" type="range" min="0" max="0" value="0" step="1">
+      </label>
     </section>
 
     <section class="panel visual-panel">

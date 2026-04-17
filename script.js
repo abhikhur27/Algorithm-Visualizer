@@ -20,6 +20,8 @@ const stepBtn = document.getElementById('step-btn');
 const backBtn = document.getElementById('back-btn');
 const resetBtn = document.getElementById('reset-btn');
 const statusText = document.getElementById('status-text');
+const stepScrubber = document.getElementById('step-scrubber');
+const scrubberValue = document.getElementById('scrubber-value');
 const comparisonsEl = document.getElementById('comparisons');
 const swapsEl = document.getElementById('swaps');
 const writesEl = document.getElementById('writes');
@@ -213,6 +215,15 @@ function updateStatsDisplay() {
   writesEl.textContent = String(stats.writes);
   stepProgressEl.textContent = `${Math.min(stepIndex, steps.length)} / ${steps.length}`;
   theoryOpsEl.textContent = estimateTheoryOps();
+  syncScrubber();
+}
+
+function syncScrubber() {
+  if (!stepScrubber || !scrubberValue) return;
+  stepScrubber.max = String(Math.max(0, steps.length));
+  stepScrubber.value = String(Math.min(stepIndex, steps.length));
+  stepScrubber.disabled = isRunning || steps.length === 0;
+  scrubberValue.textContent = `${Math.min(stepIndex, steps.length)} / ${steps.length}`;
 }
 
 function updateDiagnostics() {
@@ -352,6 +363,7 @@ function clearTimer() {
 function stopPlayback() {
   isRunning = false;
   clearTimer();
+  syncScrubber();
 }
 
 function finishPlayback() {
@@ -359,6 +371,7 @@ function finishPlayback() {
   renderArray({ done: true });
   setStatus(`Completed in ${stepIndex} steps.`);
   updateOperationLens();
+  syncScrubber();
 }
 
 function applyStep(step) {
@@ -726,6 +739,7 @@ function generateSteps() {
   stepIndex = 0;
   resetStats();
   updateOperationLens();
+  syncScrubber();
 }
 
 function summarizeOperations(stepList) {
@@ -851,6 +865,7 @@ function resetToBase() {
   updateStatsDisplay();
   updateOperationLens();
   updateBenchmarkVerdict();
+  syncScrubber();
   setStatus('Reset complete. Ready to run.');
 }
 
@@ -870,6 +885,7 @@ function setBaseArray(nextBase, message) {
   if (message) {
     setStatus(message);
   }
+  syncScrubber();
   persistState();
   syncUrlState();
 }
@@ -1010,6 +1026,16 @@ backBtn.addEventListener('click', () => {
   updateStatsDisplay();
   updateOperationLens();
   setStatus(`Moved back to ${stepIndex}/${steps.length}.`);
+});
+
+stepScrubber?.addEventListener('input', () => {
+  if (isRunning || !steps.length) return;
+  stepIndex = Number(stepScrubber.value);
+  rebuildToStep(stepIndex);
+  renderArray(stepIndex >= steps.length ? { done: true } : {});
+  updateStatsDisplay();
+  updateOperationLens();
+  setStatus(`Scrubbed to ${stepIndex}/${steps.length}.`);
 });
 
 resetBtn.addEventListener('click', resetToBase);
