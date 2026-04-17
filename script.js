@@ -52,6 +52,8 @@ const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
 const benchmarkFastestEl = document.getElementById('benchmark-fastest');
 const benchmarkGapEl = document.getElementById('benchmark-gap');
 const benchmarkStableEl = document.getElementById('benchmark-stable');
+const benchmarkRunnerUpEl = document.getElementById('benchmark-runner-up');
+const benchmarkSelectedGapEl = document.getElementById('benchmark-selected-gap');
 const benchmarkCoachEl = document.getElementById('benchmark-coach');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
@@ -780,23 +782,42 @@ function updateBenchmarkVerdict(rows = []) {
     benchmarkFastestEl.textContent = '-';
     benchmarkGapEl.textContent = '-';
     benchmarkStableEl.textContent = '-';
+    if (benchmarkRunnerUpEl) benchmarkRunnerUpEl.textContent = '-';
+    if (benchmarkSelectedGapEl) benchmarkSelectedGapEl.textContent = '-';
     benchmarkCoachEl.textContent = '-';
     return;
   }
 
   const best = rows[0];
+  const runnerUp = rows[1] || rows[0];
   const worst = rows[rows.length - 1];
   const stablePick = rows.find((row) => algorithmProfiles[row.key]?.stability === 'Yes') || best;
+  const selectedKey = algorithmSelect.value;
+  const selected = rows.find((row) => row.key === selectedKey) || best;
   const gap = worst.total - best.total;
   const gapPct = worst.total ? Math.round((gap / worst.total) * 100) : 0;
+  const selectedGap = selected.total - best.total;
+  const selectedGapPct = selected.total ? Math.round((selectedGap / selected.total) * 100) : 0;
 
   benchmarkVerdictEl.textContent = `${best.label} leads this workload by ${gap} operations over ${worst.label}.`;
   benchmarkFastestEl.textContent = best.label;
   benchmarkGapEl.textContent = `${gap} ops (${gapPct}%)`;
   benchmarkStableEl.textContent = stablePick.label;
+  if (benchmarkRunnerUpEl) {
+    benchmarkRunnerUpEl.textContent =
+      runnerUp.key === best.key ? `${best.label} (clear lead)` : `${runnerUp.label} (+${runnerUp.total - best.total} ops)`;
+  }
+  if (benchmarkSelectedGapEl) {
+    benchmarkSelectedGapEl.textContent =
+      selected.key === best.key ? 'Currently best fit' : `+${selectedGap} ops (${selectedGapPct}%)`;
+  }
 
   if (best.key === stablePick.key) {
     benchmarkCoachEl.textContent = 'The leading algorithm is also stable, so duplicate-heavy data should stay readable.';
+  } else if (selected.key === best.key) {
+    benchmarkCoachEl.textContent = `${selected.label} already leads this workload, so the current pick is aligned with the input shape.`;
+  } else if (selectedGap <= Math.max(12, best.total * 0.12)) {
+    benchmarkCoachEl.textContent = `${selected.label} is close to the winner, so the current pick is still defensible if its behavior is easier to teach.`;
   } else if (stablePick.total - best.total <= Math.max(12, best.total * 0.15)) {
     benchmarkCoachEl.textContent = `${stablePick.label} is close behind and may be the better teaching baseline when stability matters.`;
   } else {

@@ -11,6 +11,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Import/export arrays as JSON, CSV, or plain text for reproducible benchmarks.
 - One-click comparison snapshot across all implemented sorting algorithms.
 - Compare-all snapshots can now be exported as CSV for portfolio writeups or repeatable benchmarking notes.
+- Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Operation counters:
