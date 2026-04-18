@@ -14,6 +14,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
+- Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
 - Operation counters:
   - Comparisons
   - Swaps

@@ -200,6 +200,34 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
+            <h2>Workload Matchup</h2>
+            <p>Predict which sorter families should fit this array before you spend time benchmarking every option.</p>
+          </div>
+          <p id="matchup-summary" class="comparison-summary">Generate an array to forecast the best and riskiest sorter fits.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Best Fit</h3>
+            <p id="matchup-best">-</p>
+          </article>
+          <article>
+            <h3>Fast Baseline</h3>
+            <p id="matchup-baseline">-</p>
+          </article>
+          <article>
+            <h3>Risk Pick</h3>
+            <p id="matchup-risk">-</p>
+          </article>
+          <article>
+            <h3>Selected Read</h3>
+            <p id="matchup-selected">-</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
             <h2>Operation Lens</h2>
             <p>Translate the current replay step into a human-readable algorithm move.</p>
           </div>

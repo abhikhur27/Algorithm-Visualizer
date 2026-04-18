@@ -43,6 +43,11 @@ const fingerprintJumpEl = document.getElementById('fingerprint-jump');
 const fingerprintMedianEl = document.getElementById('fingerprint-median');
 const fingerprintUniqueEl = document.getElementById('fingerprint-unique');
 const fingerprintSummaryEl = document.getElementById('fingerprint-summary');
+const matchupSummaryEl = document.getElementById('matchup-summary');
+const matchupBestEl = document.getElementById('matchup-best');
+const matchupBaselineEl = document.getElementById('matchup-baseline');
+const matchupRiskEl = document.getElementById('matchup-risk');
+const matchupSelectedEl = document.getElementById('matchup-selected');
 const operationSummaryEl = document.getElementById('operation-summary');
 const operationCurrentEl = document.getElementById('operation-current');
 const operationCompareShareEl = document.getElementById('operation-compare-share');
@@ -284,6 +289,7 @@ function updateDiagnostics() {
 
   diagnosticRecommendationEl.textContent = recommendation;
   fingerprintSummaryEl.textContent = `This array has ${monotonicRuns} monotonic run${monotonicRuns === 1 ? '' : 's'}, a largest adjacent jump of ${largestJump}, and ${uniqueCount} unique value${uniqueCount === 1 ? '' : 's'}.`;
+  updateWorkloadMatchup({ sortedness, duplicateRate, inversionRatio });
   updateAlgorithmProfile({ sortedness, duplicateRate, inversionRatio });
 }
 
@@ -311,6 +317,76 @@ function updateAlgorithmProfile(metrics = null) {
   }
 
   profileFitEl.textContent = fit;
+}
+
+function updateWorkloadMatchup(metrics) {
+  if (!matchupSummaryEl || !matchupBestEl || !matchupBaselineEl || !matchupRiskEl || !matchupSelectedEl) {
+    return;
+  }
+
+  const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Selected algorithm';
+  let bestFit = 'Quick Sort';
+  let baseline = 'Merge Sort';
+  let risk = 'Bubble Sort';
+  let selectedRead = `${selectedLabel} reads like a neutral baseline on this workload.`;
+  let summary = 'This array looks general-purpose, so compare a fast partition-based sort against a stable merge baseline.';
+
+  if ((metrics.sortedness ?? 0) >= 82) {
+    bestFit = 'Insertion Sort';
+    baseline = 'Shell Sort';
+    risk = 'Bubble Sort';
+    summary = 'High pre-existing order should reward algorithms that preserve a nearly sorted prefix instead of rebuilding the array from scratch.';
+  } else if ((metrics.duplicateRate ?? 0) >= 35) {
+    bestFit = 'Merge Sort';
+    baseline = 'Radix Sort';
+    risk = 'Quick Sort';
+    summary = 'Duplicate-heavy workloads favor stable or digit-bucketed passes more than naive partitioning.';
+  } else if ((metrics.inversionRatio ?? 0) >= 0.72) {
+    bestFit = 'Heap Sort';
+    baseline = 'Merge Sort';
+    risk = 'Insertion Sort';
+    summary = 'Disorder is high enough that worst-case-safe n log n baselines should outperform incremental fix-up strategies.';
+  }
+
+  if (algorithmSelect.value === 'insertion') {
+    selectedRead =
+      (metrics.sortedness ?? 0) >= 82
+        ? 'Insertion Sort is aligned with the current order bias and should stay competitive.'
+        : 'Insertion Sort is playable here, but it needs stronger existing order to become the best fit.';
+  } else if (algorithmSelect.value === 'merge') {
+    selectedRead =
+      (metrics.duplicateRate ?? 0) >= 35
+        ? 'Merge Sort is aligned with the duplicate-heavy shape and offers a clean stable baseline.'
+        : 'Merge Sort is a safe benchmark even if the workload does not strongly demand stability.';
+  } else if (algorithmSelect.value === 'heap') {
+    selectedRead =
+      (metrics.inversionRatio ?? 0) >= 0.72
+        ? 'Heap Sort matches the current disorder-heavy profile and gives a dependable worst-case baseline.'
+        : 'Heap Sort is robust here, but the workload does not clearly require its worst-case posture.';
+  } else if (algorithmSelect.value === 'quick') {
+    selectedRead =
+      (metrics.duplicateRate ?? 0) >= 35
+        ? 'Quick Sort is the main risk pick here because duplicate-heavy inputs can produce noisy partition costs.'
+        : 'Quick Sort still reads like the fast default when the array has no strong structural bias.';
+  } else if (algorithmSelect.value === 'radix') {
+    selectedRead =
+      (metrics.duplicateRate ?? 0) >= 20
+        ? 'Radix Sort becomes more plausible when bounded integer keys repeat across the array.'
+        : 'Radix Sort works, but the current array shape does not clearly justify digit-pass overhead.';
+  } else if (algorithmSelect.value === 'bubble') {
+    selectedRead = 'Bubble Sort remains a teaching contrast here rather than a likely winner.';
+  } else if (algorithmSelect.value === 'shell') {
+    selectedRead =
+      (metrics.sortedness ?? 0) >= 70
+        ? 'Shell Sort is a sensible fast baseline when the array is partially ordered but not insertion-friendly enough.'
+        : 'Shell Sort is viable here, though the workload does not strongly demand its gap-pass behavior.';
+  }
+
+  matchupSummaryEl.textContent = summary;
+  matchupBestEl.textContent = bestFit;
+  matchupBaselineEl.textContent = baseline;
+  matchupRiskEl.textContent = risk;
+  matchupSelectedEl.textContent = selectedRead;
 }
 
 function estimateTheoryOps() {
