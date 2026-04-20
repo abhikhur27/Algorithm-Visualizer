@@ -9,6 +9,7 @@ const compareBtn = document.getElementById('compare-btn');
 const shareArrayBtn = document.getElementById('share-array-btn');
 const exportArrayBtn = document.getElementById('export-array-btn');
 const exportCompareBtn = document.getElementById('export-compare-btn');
+const copyBriefBtn = document.getElementById('copy-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
 const sizeValue = document.getElementById('size-value');
@@ -951,6 +952,31 @@ function exportComparisonCsv() {
   setStatus('Exported compare-all snapshot as CSV.');
 }
 
+function buildBenchmarkBrief() {
+  const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Selected algorithm';
+  const lines = [
+    'Algorithm Visualizer Benchmark Brief',
+    '',
+    `Selected algorithm: ${selectedLabel}`,
+    `Array size: ${baseArray.length}`,
+    `Current workload: ${baseArray.join(', ')}`,
+    `Fingerprint: sortedness ${diagnosticSortednessEl?.textContent || '-'} | duplicate rate ${diagnosticDuplicatesEl?.textContent || '-'} | spread ${diagnosticSpreadEl?.textContent || '-'} | inversions ${diagnosticInversionsEl?.textContent || '-'}`,
+    `Selected run stats: comparisons ${stats.comparisons}, swaps ${stats.swaps}, writes ${stats.writes}, steps ${steps.length}`,
+    `Workload matchup: ${matchupSummaryEl?.textContent || '-'}`,
+    `Benchmark verdict: ${benchmarkVerdictEl?.textContent || comparisonSummary?.textContent || 'Compare all algorithms to produce a benchmark verdict.'}`,
+  ];
+
+  if (lastComparisonRows.length) {
+    lines.push('');
+    lines.push('Compare-all ranking:');
+    lastComparisonRows.forEach((row, index) => {
+      lines.push(`${index + 1}. ${row.label} | total ${row.total} | comparisons ${row.comparisons} | swaps ${row.swaps} | writes ${row.writes}`);
+    });
+  }
+
+  return lines.join('\n');
+}
+
 function resetToBase() {
   stopPlayback();
   currentArray = [...baseArray];
@@ -1139,6 +1165,14 @@ resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
+copyBriefBtn?.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(buildBenchmarkBrief());
+    setStatus('Copied a benchmark brief with the current workload and algorithm summary.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
 shareArrayBtn?.addEventListener('click', async () => {
   syncUrlState();
   try {
