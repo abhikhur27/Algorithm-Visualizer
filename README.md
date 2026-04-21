@@ -49,6 +49,13 @@ python -m http.server 8000
 
 Open `http://localhost:8000`.
 
+## Portfolio Demo Path
+
+1. Load the `Reversed` preset.
+2. Run `Compare All` to create a benchmark verdict.
+3. Scrub through Quick Sort or Merge Sort to show replayable operations.
+4. Use `Copy Benchmark Brief` for a repeatable writeup artifact.
+
 ## GitHub Pages Compatibility
 
 - Pure static assets.
