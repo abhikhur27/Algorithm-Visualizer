@@ -54,6 +54,8 @@ const operationCurrentEl = document.getElementById('operation-current');
 const operationCompareShareEl = document.getElementById('operation-compare-share');
 const operationSwapShareEl = document.getElementById('operation-swap-share');
 const operationWriteShareEl = document.getElementById('operation-write-share');
+const teachingCutSummaryEl = document.getElementById('teaching-cut-summary');
+const teachingCutListEl = document.getElementById('teaching-cut-list');
 const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
 const benchmarkFastestEl = document.getElementById('benchmark-fastest');
 const benchmarkGapEl = document.getElementById('benchmark-gap');
@@ -509,6 +511,30 @@ function updateOperationLens() {
   operationCompareShareEl.textContent = stepShare(summary.comparisons, summary.total);
   operationSwapShareEl.textContent = stepShare(summary.swaps, summary.total);
   operationWriteShareEl.textContent = stepShare(summary.writes, summary.total);
+  updateTeachingCut(summary);
+}
+
+function updateTeachingCut(summary) {
+  if (!teachingCutSummaryEl || !teachingCutListEl) return;
+
+  if (!steps.length) {
+    teachingCutSummaryEl.textContent = 'Generate steps to get a compact narration path.';
+    teachingCutListEl.innerHTML = '';
+    return;
+  }
+
+  const selectedIndexes = [0, Math.floor(steps.length * 0.25), Math.floor(steps.length * 0.5), Math.floor(steps.length * 0.75), steps.length - 1]
+    .filter((value, index, values) => value >= 0 && values.indexOf(value) === index);
+  const dominant = summary.writes > summary.swaps && summary.writes > summary.comparisons
+    ? 'write-heavy'
+    : summary.swaps > summary.writes
+      ? 'swap-heavy'
+      : 'comparison-heavy';
+
+  teachingCutSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex].text} is ${dominant} on this input; narrate these checkpoints instead of every operation.`;
+  teachingCutListEl.innerHTML = selectedIndexes
+    .map((index) => `<li><strong>Step ${index + 1}</strong>: ${describeStep(steps[index], index)}</li>`)
+    .join('');
 }
 
 function rebuildToStep(targetStep) {

@@ -373,6 +373,15 @@ td {
   color: var(--text);
 }
 
+.teaching-cut-list {
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 980px) {
   .grid {
     grid-template-columns: 1fr;

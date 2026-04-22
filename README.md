@@ -20,6 +20,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
   - Comparisons
   - Swaps
   - Writes
+- Replay teaching cut that picks five narration checkpoints from the generated operation stream.
 - Responsive bar visualization with color-coded state legend.
 
 ## Technical Design
