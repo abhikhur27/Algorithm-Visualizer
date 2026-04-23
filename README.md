@@ -16,6 +16,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
+- Experiment coach recommends the next preset contrast that makes the selected algorithm's tradeoff easiest to explain in a demo.
 - Operation counters:
   - Comparisons
   - Swaps
@@ -56,6 +57,7 @@ Open `http://localhost:8000`.
 2. Run `Compare All` to create a benchmark verdict.
 3. Scrub through Quick Sort or Merge Sort to show replayable operations.
 4. Use `Copy Benchmark Brief` for a repeatable writeup artifact.
+5. Follow the Experiment Coach to stage one strong-fit run and one contrast run for the same algorithm.
 
 ## GitHub Pages Compatibility
 

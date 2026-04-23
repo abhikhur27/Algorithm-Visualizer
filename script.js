@@ -49,6 +49,11 @@ const matchupBestEl = document.getElementById('matchup-best');
 const matchupBaselineEl = document.getElementById('matchup-baseline');
 const matchupRiskEl = document.getElementById('matchup-risk');
 const matchupSelectedEl = document.getElementById('matchup-selected');
+const experimentCoachSummaryEl = document.getElementById('experiment-coach-summary');
+const experimentCoachBestEl = document.getElementById('experiment-coach-best');
+const experimentCoachContrastEl = document.getElementById('experiment-coach-contrast');
+const experimentCoachAngleEl = document.getElementById('experiment-coach-angle');
+const experimentCoachWatchEl = document.getElementById('experiment-coach-watch');
 const operationSummaryEl = document.getElementById('operation-summary');
 const operationCurrentEl = document.getElementById('operation-current');
 const operationCompareShareEl = document.getElementById('operation-compare-share');
@@ -294,6 +299,71 @@ function updateDiagnostics() {
   fingerprintSummaryEl.textContent = `This array has ${monotonicRuns} monotonic run${monotonicRuns === 1 ? '' : 's'}, a largest adjacent jump of ${largestJump}, and ${uniqueCount} unique value${uniqueCount === 1 ? '' : 's'}.`;
   updateWorkloadMatchup({ sortedness, duplicateRate, inversionRatio });
   updateAlgorithmProfile({ sortedness, duplicateRate, inversionRatio });
+  updateExperimentCoach({ sortedness, duplicateRate, inversionRatio, spread: Math.max(...baseArray) - Math.min(...baseArray) });
+}
+
+function updateExperimentCoach(metrics = null) {
+  if (!experimentCoachSummaryEl || !experimentCoachBestEl || !experimentCoachContrastEl || !experimentCoachAngleEl || !experimentCoachWatchEl) {
+    return;
+  }
+
+  if (!baseArray.length) {
+    experimentCoachSummaryEl.textContent = 'Generate an array to stage the next contrast test.';
+    experimentCoachBestEl.textContent = '-';
+    experimentCoachContrastEl.textContent = '-';
+    experimentCoachAngleEl.textContent = '-';
+    experimentCoachWatchEl.textContent = '-';
+    return;
+  }
+
+  const selected = algorithmSelect.value;
+  const sortedness = metrics?.sortedness ?? 50;
+  const duplicateRate = metrics?.duplicateRate ?? 0;
+  const spread = metrics?.spread ?? Math.max(...baseArray) - Math.min(...baseArray);
+
+  const coach = {
+    summary: 'Use the current array as a baseline, then run one preset contrast so the algorithm tradeoff becomes legible.',
+    best: 'Nearly Sorted preset',
+    contrast: 'Reversed preset',
+    angle: 'Compare a friendly input against a hostile one with the same sorter selected.',
+    watch: 'Use Compare All after each run so the contrast is anchored in operation counts, not just animation feel.',
+  };
+
+  if (selected === 'bubble' || selected === 'insertion') {
+    coach.best = sortedness >= 70 ? 'Keep this workload or reload Nearly Sorted.' : 'Nearly Sorted preset';
+    coach.contrast = 'Reversed preset';
+    coach.angle = 'Frame the selected sorter as an input-shape specialist rather than a generic winner.';
+    coach.watch = 'Narrate how quickly the best case collapses once local order disappears.';
+  } else if (selected === 'shell') {
+    coach.best = sortedness >= 50 ? 'Nearly Sorted preset' : 'Current workload';
+    coach.contrast = 'Reversed preset';
+    coach.angle = 'Show Shell Sort as the in-place bridge between insertion-style locality and heavier sorters.';
+    coach.watch = 'Use the write count to show whether the gap passes are actually reducing churn.';
+  } else if (selected === 'merge' || selected === 'heap' || selected === 'quick') {
+    coach.best = spread <= 35 ? 'Randomize for a wider spread.' : 'Current workload is already a fair benchmark.';
+    coach.contrast = 'Few Unique preset';
+    coach.angle = 'Use duplicate-heavy data to show whether fast also means well behaved for this sorter.';
+    coach.watch = 'Call out whether the selected algorithm wins on total work or simply avoids the worst-case blow-up.';
+  } else if (selected === 'radix') {
+    coach.best = 'Few Unique preset';
+    coach.contrast = 'Randomize, then switch to Quick Sort or Merge Sort.';
+    coach.angle = 'Frame Radix Sort as a data-domain specialist, not a universal replacement.';
+    coach.watch = 'Mention that its advantage depends on bounded non-negative integers in this app.';
+  }
+
+  if (duplicateRate >= 35) {
+    coach.summary = 'This workload is duplicate-heavy, so the best demo is a stability-flavored contrast rather than a pure speed race.';
+  } else if (sortedness >= 75) {
+    coach.summary = 'This workload is already close to sorted, which makes it ideal for explaining why input shape matters as much as asymptotic complexity.';
+  } else if (spread <= 24) {
+    coach.summary = 'The value band is tight, so this is a good spot to discuss when the data domain changes the right algorithm pick.';
+  }
+
+  experimentCoachSummaryEl.textContent = coach.summary;
+  experimentCoachBestEl.textContent = coach.best;
+  experimentCoachContrastEl.textContent = coach.contrast;
+  experimentCoachAngleEl.textContent = coach.angle;
+  experimentCoachWatchEl.textContent = coach.watch;
 }
 
 function updateAlgorithmProfile(metrics = null) {
@@ -1028,6 +1098,7 @@ function setBaseArray(nextBase, message) {
   renderArray();
   updateDiagnostics();
   updateAlgorithmProfile();
+  updateExperimentCoach();
   updateStatsDisplay();
   updateOperationLens();
   updateBenchmarkVerdict();
@@ -1236,6 +1307,7 @@ algorithmSelect.addEventListener('change', () => {
   stepIndex = 0;
   updateNote();
   updateAlgorithmProfile();
+  updateExperimentCoach();
   setStatus('Algorithm changed. Press Start to run the new strategy.');
   renderArray();
   updateStatsDisplay();
