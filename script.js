@@ -70,6 +70,8 @@ const benchmarkSelectedGapEl = document.getElementById('benchmark-selected-gap')
 const benchmarkCoachEl = document.getElementById('benchmark-coach');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
+const comparisonHistorySummary = document.getElementById('comparison-history-summary');
+const comparisonHistoryBody = document.getElementById('comparison-history-body');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
 
 const algorithmGenerators = {
@@ -109,6 +111,7 @@ let stepIndex = 0;
 let timerId = null;
 let isRunning = false;
 let lastComparisonRows = [];
+let comparisonHistory = [];
 let stats = {
   comparisons: 0,
   swaps: 0,
@@ -130,6 +133,7 @@ function persistState() {
     speed: speedSlider.value,
     customArray: customArrayInput.value,
     baseArray,
+    comparisonHistory,
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -947,6 +951,26 @@ function renderComparisonRows(rows) {
     .join('');
 }
 
+function renderComparisonHistory() {
+  if (!comparisonHistorySummary || !comparisonHistoryBody) return;
+  if (!comparisonHistory.length) {
+    comparisonHistorySummary.textContent = 'No benchmark history saved yet.';
+    comparisonHistoryBody.innerHTML = '<article class="comparison-history-item"><strong>Waiting for a compare-all run.</strong><p>Benchmark a workload to keep a reusable before/after snapshot for future demos.</p></article>';
+    return;
+  }
+
+  comparisonHistorySummary.textContent = `${comparisonHistory.length} compare-all snapshot${comparisonHistory.length === 1 ? '' : 's'} saved locally.`;
+  comparisonHistoryBody.innerHTML = comparisonHistory
+    .map((entry) => `
+      <article class="comparison-history-item">
+        <strong>${entry.best} led on ${entry.arrayLabel}.</strong>
+        <p>${entry.summary}</p>
+        <p>Array preview: ${entry.arrayPreview}</p>
+      </article>
+    `)
+    .join('');
+}
+
 function updateBenchmarkVerdict(rows = []) {
   if (!benchmarkVerdictEl || !benchmarkFastestEl || !benchmarkGapEl || !benchmarkStableEl || !benchmarkCoachEl) return;
 
@@ -1023,6 +1047,20 @@ function compareAlgorithms() {
     const worst = rows[rows.length - 1];
     comparisonSummary.textContent = `${best.label} is lightest on this input; ${worst.label} does the most work.`;
   }
+
+  const best = rows[0];
+  const worst = rows[rows.length - 1];
+  comparisonHistory = [
+    {
+      best: best.label,
+      arrayLabel: `${baseArray.length}-value workload`,
+      arrayPreview: baseArray.slice(0, 10).join(', '),
+      summary: `${best.label} beat ${rows[1]?.label || worst.label} by ${Math.max(0, (rows[1]?.total || best.total) - best.total)} operations while ${worst.label} landed last.`,
+    },
+    ...comparisonHistory,
+  ].slice(0, 5);
+  renderComparisonHistory();
+  persistState();
 
   setStatus('Compared all algorithms on the current array.');
 }
@@ -1320,6 +1358,7 @@ if (persistedState) {
   if (persistedState.size) sizeSlider.value = String(persistedState.size);
   if (persistedState.speed) speedSlider.value = String(persistedState.speed);
   if (typeof persistedState.customArray === 'string') customArrayInput.value = persistedState.customArray;
+  if (Array.isArray(persistedState.comparisonHistory)) comparisonHistory = persistedState.comparisonHistory.slice(0, 5);
 }
 const sharedArray = hydrateFromUrlState();
 
@@ -1339,3 +1378,4 @@ if (Array.isArray(sharedArray) && sharedArray.length >= 5) {
 }
 
 updateStatsDisplay();
+renderComparisonHistory();

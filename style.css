@@ -326,6 +326,28 @@ button:disabled {
   max-width: 26ch;
 }
 
+.comparison-history-head {
+  margin-top: 1rem;
+}
+
+.comparison-history-list {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.comparison-history-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 13, 28, 0.45);
+  padding: 0.75rem 0.85rem;
+}
+
+.comparison-history-item p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+}
+
 .table-wrap {
   overflow-x: auto;
   margin-top: 0.75rem;
