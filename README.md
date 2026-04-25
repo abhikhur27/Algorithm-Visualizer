@@ -13,6 +13,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Copy Benchmark Brief turns the current workload, selected run stats, and compare-all ranking into a clipboard-ready summary.
 - Compare-all snapshots can now be exported as CSV for portfolio writeups or repeatable benchmarking notes.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
+- Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.

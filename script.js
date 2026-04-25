@@ -72,6 +72,11 @@ const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const comparisonHistorySummary = document.getElementById('comparison-history-summary');
 const comparisonHistoryBody = document.getElementById('comparison-history-body');
+const stabilitySummaryEl = document.getElementById('stability-summary');
+const stabilityStreakEl = document.getElementById('stability-streak');
+const stabilitySpreadEl = document.getElementById('stability-spread');
+const stabilityBaselineEl = document.getElementById('stability-baseline');
+const stabilityCueEl = document.getElementById('stability-cue');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
 
 const algorithmGenerators = {
@@ -956,6 +961,7 @@ function renderComparisonHistory() {
   if (!comparisonHistory.length) {
     comparisonHistorySummary.textContent = 'No benchmark history saved yet.';
     comparisonHistoryBody.innerHTML = '<article class="comparison-history-item"><strong>Waiting for a compare-all run.</strong><p>Benchmark a workload to keep a reusable before/after snapshot for future demos.</p></article>';
+    renderStabilityRead();
     return;
   }
 
@@ -969,6 +975,51 @@ function renderComparisonHistory() {
       </article>
     `)
     .join('');
+  renderStabilityRead();
+}
+
+function renderStabilityRead() {
+  if (!stabilitySummaryEl || !stabilityStreakEl || !stabilitySpreadEl || !stabilityBaselineEl || !stabilityCueEl) return;
+
+  if (!comparisonHistory.length) {
+    stabilitySummaryEl.textContent = 'Run Compare All a few times to inspect winner consistency.';
+    stabilityStreakEl.textContent = '-';
+    stabilitySpreadEl.textContent = '-';
+    stabilityBaselineEl.textContent = '-';
+    stabilityCueEl.textContent = '-';
+    return;
+  }
+
+  const winners = comparisonHistory.map((entry) => entry.best);
+  const leader = winners[0];
+  let streak = 0;
+  for (const winner of winners) {
+    if (winner !== leader) break;
+    streak += 1;
+  }
+
+  const winnerCounts = winners.reduce((acc, winner) => {
+    acc[winner] = (acc[winner] || 0) + 1;
+    return acc;
+  }, {});
+  const uniqueWinners = Object.keys(winnerCounts);
+  const repeatableBaseline = uniqueWinners.sort((a, b) => winnerCounts[b] - winnerCounts[a])[0];
+
+  stabilitySummaryEl.textContent =
+    uniqueWinners.length === 1
+      ? `${leader} has won every saved compare-all snapshot so far.`
+      : `${leader} led the latest run, but ${uniqueWinners.length} different algorithms have won across recent workloads.`;
+  stabilityStreakEl.textContent = `${leader} x${streak}`;
+  stabilitySpreadEl.textContent = `${uniqueWinners.length} winner${uniqueWinners.length === 1 ? '' : 's'} in ${comparisonHistory.length} runs`;
+  stabilityBaselineEl.textContent = `${repeatableBaseline} (${winnerCounts[repeatableBaseline]} wins)`;
+
+  if (uniqueWinners.length === 1) {
+    stabilityCueEl.textContent = 'This workload family is behaving consistently, so the same winner is a credible demo anchor.';
+  } else if (streak >= 2) {
+    stabilityCueEl.textContent = 'The latest winner is building a streak, so contrast it against one earlier upset to show where the boundary moves.';
+  } else {
+    stabilityCueEl.textContent = 'Winner churn is high, so frame this tool around input-shape sensitivity rather than a universal best sorter.';
+  }
 }
 
 function updateBenchmarkVerdict(rows = []) {
