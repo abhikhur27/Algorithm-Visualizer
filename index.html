@@ -67,6 +67,7 @@
         <button id="copy-brief-btn" type="button">Copy Benchmark Brief</button>
         <button id="import-array-btn" type="button">Import Array</button>
         <button id="compare-btn" type="button">Compare All</button>
+        <button id="gauntlet-btn" type="button">Run Preset Gauntlet</button>
         <button id="start-btn" class="primary" type="button">Start</button>
         <button id="pause-btn" type="button">Pause</button>
         <button id="step-btn" type="button">Step</button>
@@ -357,6 +358,32 @@
             </tbody>
           </table>
         </div>
+        <div class="comparison-head comparison-history-head">
+          <div>
+            <h2>Preset Gauntlet</h2>
+            <p>Benchmark the full sorter set against four workload families instead of a single one-off array.</p>
+          </div>
+          <p id="gauntlet-summary" class="comparison-summary">Run the gauntlet to see which algorithms keep winning across contrasting presets.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Most Wins</h3>
+            <p id="gauntlet-leader">-</p>
+          </article>
+          <article>
+            <h3>Steadiest Baseline</h3>
+            <p id="gauntlet-baseline">-</p>
+          </article>
+          <article>
+            <h3>Biggest Upset</h3>
+            <p id="gauntlet-upset">-</p>
+          </article>
+          <article>
+            <h3>Operator Cue</h3>
+            <p id="gauntlet-cue">-</p>
+          </article>
+        </div>
+
         <div class="comparison-head comparison-history-head">
           <div>
             <h2>Recent Compare-All Runs</h2>

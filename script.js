@@ -12,6 +12,7 @@ const exportCompareBtn = document.getElementById('export-compare-btn');
 const copyBriefBtn = document.getElementById('copy-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
+const gauntletBtn = document.getElementById('gauntlet-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
@@ -77,6 +78,11 @@ const stabilityStreakEl = document.getElementById('stability-streak');
 const stabilitySpreadEl = document.getElementById('stability-spread');
 const stabilityBaselineEl = document.getElementById('stability-baseline');
 const stabilityCueEl = document.getElementById('stability-cue');
+const gauntletSummaryEl = document.getElementById('gauntlet-summary');
+const gauntletLeaderEl = document.getElementById('gauntlet-leader');
+const gauntletBaselineEl = document.getElementById('gauntlet-baseline');
+const gauntletUpsetEl = document.getElementById('gauntlet-upset');
+const gauntletCueEl = document.getElementById('gauntlet-cue');
 const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
 
 const algorithmGenerators = {
@@ -1022,6 +1028,63 @@ function renderStabilityRead() {
   }
 }
 
+function runPresetGauntlet() {
+  if (!gauntletSummaryEl || !gauntletLeaderEl || !gauntletBaselineEl || !gauntletUpsetEl || !gauntletCueEl) return;
+
+  const size = Number(sizeSlider.value);
+  const workloads = [
+    { label: 'Randomized', values: randomArray(size) },
+    { label: 'Nearly Sorted', values: patternedArray(size, 'nearly') },
+    { label: 'Reversed', values: patternedArray(size, 'reversed') },
+    { label: 'Few Unique', values: patternedArray(size, 'few') },
+  ];
+
+  const results = workloads.map((workload) => {
+    const rows = Object.entries(algorithmGenerators)
+      .map(([key, generator]) => {
+        const summary = summarizeOperations(generator(workload.values));
+        return {
+          key,
+          label: algorithmSelect.querySelector(`option[value="${key}"]`)?.textContent || key,
+          total: summary.total,
+        };
+      })
+      .sort((a, b) => a.total - b.total);
+
+    return { workload: workload.label, rows };
+  });
+
+  const winCounts = {};
+  const podiumCounts = {};
+  results.forEach(({ rows }) => {
+    rows.forEach((row, index) => {
+      podiumCounts[row.label] = (podiumCounts[row.label] || 0) + (rows.length - index);
+    });
+    winCounts[rows[0].label] = (winCounts[rows[0].label] || 0) + 1;
+  });
+
+  const leader = Object.keys(winCounts).sort((a, b) => winCounts[b] - winCounts[a])[0];
+  const baseline = Object.keys(podiumCounts).sort((a, b) => podiumCounts[b] - podiumCounts[a])[0];
+  const biggestUpset = results
+    .map(({ workload, rows }) => ({
+      workload,
+      winner: rows[0],
+      runnerUp: rows[1] || rows[0],
+      margin: (rows[1]?.total || rows[0].total) - rows[0].total,
+    }))
+    .sort((a, b) => b.margin - a.margin)[0];
+
+  gauntletSummaryEl.textContent = `${leader} won ${winCounts[leader]} of ${results.length} preset families in the current gauntlet.`;
+  gauntletLeaderEl.textContent = `${leader} (${winCounts[leader]} wins)`;
+  gauntletBaselineEl.textContent = `${baseline} (${podiumCounts[baseline]} podium points)`;
+  gauntletUpsetEl.textContent = `${biggestUpset.workload}: ${biggestUpset.winner.label} by ${biggestUpset.margin} ops`;
+  gauntletCueEl.textContent =
+    leader === baseline
+      ? `${leader} is both the repeat winner and the steadiest baseline, so it is the cleanest anchor for multi-workload demos.`
+      : `${leader} wins the most presets, but ${baseline} is steadier across the full field. Use both to explain specialist vs baseline behavior.`;
+  setStatus('Preset gauntlet complete.');
+}
+
 function updateBenchmarkVerdict(rows = []) {
   if (!benchmarkVerdictEl || !benchmarkFastestEl || !benchmarkGapEl || !benchmarkStableEl || !benchmarkCoachEl) return;
 
@@ -1349,6 +1412,7 @@ stepScrubber?.addEventListener('input', () => {
 
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
+gauntletBtn?.addEventListener('click', runPresetGauntlet);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
 copyBriefBtn?.addEventListener('click', async () => {

@@ -12,6 +12,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - One-click comparison snapshot across all implemented sorting algorithms.
 - Copy Benchmark Brief turns the current workload, selected run stats, and compare-all ranking into a clipboard-ready summary.
 - Compare-all snapshots can now be exported as CSV for portfolio writeups or repeatable benchmarking notes.
+- Preset gauntlet benchmarks every implemented sorter across randomized, nearly-sorted, reversed, and few-unique workloads in one pass.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
 - Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
