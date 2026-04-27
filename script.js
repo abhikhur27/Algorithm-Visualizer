@@ -78,6 +78,11 @@ const stabilityStreakEl = document.getElementById('stability-streak');
 const stabilitySpreadEl = document.getElementById('stability-spread');
 const stabilityBaselineEl = document.getElementById('stability-baseline');
 const stabilityCueEl = document.getElementById('stability-cue');
+const contrastSummaryEl = document.getElementById('contrast-summary');
+const contrastAnchorEl = document.getElementById('contrast-anchor');
+const contrastOpponentEl = document.getElementById('contrast-opponent');
+const contrastAngleEl = document.getElementById('contrast-angle');
+const contrastHistoryEl = document.getElementById('contrast-history');
 const gauntletSummaryEl = document.getElementById('gauntlet-summary');
 const gauntletLeaderEl = document.getElementById('gauntlet-leader');
 const gauntletBaselineEl = document.getElementById('gauntlet-baseline');
@@ -1028,6 +1033,42 @@ function renderStabilityRead() {
   }
 }
 
+function renderContrastPlanner(rows = lastComparisonRows) {
+  if (!contrastSummaryEl || !contrastAnchorEl || !contrastOpponentEl || !contrastAngleEl || !contrastHistoryEl) return;
+
+  if (!rows.length) {
+    contrastSummaryEl.textContent = 'Run Compare All to pick an anchor sorter and its best contrast.';
+    contrastAnchorEl.textContent = '-';
+    contrastOpponentEl.textContent = '-';
+    contrastAngleEl.textContent = '-';
+    contrastHistoryEl.textContent = '-';
+    return;
+  }
+
+  const leader = rows[0];
+  const runnerUp = rows[1] || rows[0];
+  const worst = rows[rows.length - 1];
+  const gapToRunnerUp = Math.max(0, runnerUp.total - leader.total);
+  const closeRace = runnerUp !== leader && gapToRunnerUp <= Math.max(12, leader.total * 0.12);
+  const contrast = closeRace ? runnerUp : worst;
+  const winnerCounts = comparisonHistory.reduce((acc, entry) => {
+    acc[entry.best] = (acc[entry.best] || 0) + 1;
+    return acc;
+  }, {});
+  const leaderHistory = winnerCounts[leader.label] || 0;
+
+  contrastSummaryEl.textContent = `${leader.label} is the anchor; ${contrast.label} gives the clearest contrast on this workload.`;
+  contrastAnchorEl.textContent = `${leader.label} (${leader.total} ops)`;
+  contrastOpponentEl.textContent = `${contrast.label} (${contrast.total} ops)`;
+  contrastAngleEl.textContent = closeRace
+    ? `${runnerUp.label} stayed within ${gapToRunnerUp} ops, so this is a specialist-vs-specialist comparison.`
+    : `${contrast.label} trails by ${Math.max(0, contrast.total - leader.total)} ops, which makes the workload fit boundary obvious fast.`;
+  contrastHistoryEl.textContent =
+    leaderHistory >= 2
+      ? `${leader.label} has already won ${leaderHistory} recent snapshot${leaderHistory === 1 ? '' : 's'}, so the anchor looks repeatable.`
+      : 'Winner history is still mixed, so this run is best framed as one workload-specific read rather than a universal rule.';
+}
+
 function runPresetGauntlet() {
   if (!gauntletSummaryEl || !gauntletLeaderEl || !gauntletBaselineEl || !gauntletUpsetEl || !gauntletCueEl) return;
 
@@ -1175,6 +1216,7 @@ function compareAlgorithms() {
   ].slice(0, 5);
   renderComparisonHistory();
   persistState();
+  renderContrastPlanner(rows);
 
   setStatus('Compared all algorithms on the current array.');
 }
@@ -1494,3 +1536,4 @@ if (Array.isArray(sharedArray) && sharedArray.length >= 5) {
 
 updateStatsDisplay();
 renderComparisonHistory();
+renderContrastPlanner();
