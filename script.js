@@ -1401,6 +1401,11 @@ function importArray(event) {
   reader.readAsText(file);
 }
 
+function isEditableTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
 startBtn.addEventListener('click', () => {
   if (!steps.length || stepIndex >= steps.length) {
     generateSteps();
@@ -1537,3 +1542,67 @@ if (Array.isArray(sharedArray) && sharedArray.length >= 5) {
 updateStatsDisplay();
 renderComparisonHistory();
 renderContrastPlanner();
+
+document.addEventListener('keydown', (event) => {
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isEditableTarget(event.target)) {
+    return;
+  }
+
+  if (event.code === 'Space') {
+    event.preventDefault();
+    if (isRunning) {
+      stopPlayback();
+      setStatus('Paused. You can step manually or resume.');
+      return;
+    }
+    if (!steps.length || stepIndex >= steps.length) {
+      generateSteps();
+    }
+    startPlayback();
+    return;
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    if (isRunning) return;
+    if (!steps.length || stepIndex >= steps.length) {
+      generateSteps();
+    }
+    runOneStep();
+    setStatus(`Stepped to ${stepIndex}/${steps.length}.`);
+    return;
+  }
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    if (isRunning || !steps.length) return;
+    if (stepIndex <= 0) {
+      setStatus('Already at the initial state.');
+      return;
+    }
+    stepIndex = Math.max(0, stepIndex - 1);
+    rebuildToStep(stepIndex);
+    renderArray();
+    updateStatsDisplay();
+    updateOperationLens();
+    setStatus(`Moved back to ${stepIndex}/${steps.length}.`);
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'r') {
+    event.preventDefault();
+    regenerateArray();
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'c') {
+    event.preventDefault();
+    compareAlgorithms();
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'g') {
+    event.preventDefault();
+    runPresetGauntlet();
+  }
+});

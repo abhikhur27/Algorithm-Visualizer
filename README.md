@@ -69,5 +69,5 @@ Open `http://localhost:8000`.
 
 ## Future Improvements
 
-- Add radix sort and shell sort.
+- Add side-by-side visual diffing between two selected sorters on the same workload.
 - Add comparison history across multiple imported workloads.
