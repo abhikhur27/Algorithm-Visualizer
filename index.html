@@ -61,6 +61,7 @@
       <div class="buttons">
         <button id="apply-array-btn" type="button">Apply Array</button>
         <button id="randomize-btn" type="button">Randomize</button>
+        <button id="save-workload-btn" type="button">Save Workload</button>
         <button id="share-array-btn" type="button">Copy Share Link</button>
         <button id="export-array-btn" type="button">Export Array</button>
         <button id="export-compare-btn" type="button">Export Compare CSV</button>
@@ -384,6 +385,15 @@
             <p id="gauntlet-cue">-</p>
           </article>
         </div>
+
+        <div class="comparison-head comparison-history-head">
+          <div>
+            <h2>Saved Workload Shelf</h2>
+            <p>Keep a small local set of arrays worth re-running so the demo can return to a known contrast quickly.</p>
+          </div>
+          <p id="saved-workloads-summary" class="comparison-summary">Save the current array to build a reusable workload shelf.</p>
+        </div>
+        <div id="saved-workloads-body" class="comparison-history-list"></div>
 
         <div class="comparison-head comparison-history-head">
           <div>

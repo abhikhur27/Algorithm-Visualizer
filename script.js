@@ -16,6 +16,7 @@ const gauntletBtn = document.getElementById('gauntlet-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
+const saveWorkloadBtn = document.getElementById('save-workload-btn');
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const stepBtn = document.getElementById('step-btn');
@@ -71,6 +72,8 @@ const benchmarkSelectedGapEl = document.getElementById('benchmark-selected-gap')
 const benchmarkCoachEl = document.getElementById('benchmark-coach');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
+const savedWorkloadsSummary = document.getElementById('saved-workloads-summary');
+const savedWorkloadsBody = document.getElementById('saved-workloads-body');
 const comparisonHistorySummary = document.getElementById('comparison-history-summary');
 const comparisonHistoryBody = document.getElementById('comparison-history-body');
 const stabilitySummaryEl = document.getElementById('stability-summary');
@@ -128,6 +131,7 @@ let timerId = null;
 let isRunning = false;
 let lastComparisonRows = [];
 let comparisonHistory = [];
+let savedWorkloads = [];
 let stats = {
   comparisons: 0,
   swaps: 0,
@@ -150,6 +154,7 @@ function persistState() {
     customArray: customArrayInput.value,
     baseArray,
     comparisonHistory,
+    savedWorkloads,
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -238,6 +243,65 @@ function patternedArray(size, mode) {
 
 function setStatus(message) {
   statusText.textContent = message;
+}
+
+function buildWorkloadLabel() {
+  const sortedness = diagnosticSortednessEl?.textContent || '-';
+  const duplicates = diagnosticDuplicatesEl?.textContent || '-';
+  const algorithmLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Algorithm';
+  return `${algorithmLabel} | ${baseArray.length} values | ${sortedness} sorted | ${duplicates} duplicates`;
+}
+
+function renderSavedWorkloads() {
+  if (!savedWorkloadsBody || !savedWorkloadsSummary) return;
+
+  if (!savedWorkloads.length) {
+    savedWorkloadsSummary.textContent = 'Save the current array to build a reusable workload shelf.';
+    savedWorkloadsBody.innerHTML = '';
+    return;
+  }
+
+  savedWorkloadsSummary.textContent = `${savedWorkloads.length} saved workload${savedWorkloads.length === 1 ? '' : 's'} ready for repeatable benchmark passes.`;
+  savedWorkloadsBody.innerHTML = savedWorkloads
+    .map(
+      (entry, index) => `
+        <article class="history-card">
+          <p class="history-label">Saved workload ${index + 1}</p>
+          <strong>${entry.label}</strong>
+          <p>${entry.preview}</p>
+          <p>${entry.note}</p>
+          <div class="card-actions">
+            <button class="load-workload-btn" type="button" data-index="${index}">Load</button>
+            <button class="delete-workload-btn" type="button" data-index="${index}">Delete</button>
+          </div>
+        </article>
+      `
+    )
+    .join('');
+
+  savedWorkloadsBody.querySelectorAll('.load-workload-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      const entry = savedWorkloads[index];
+      if (!entry) return;
+      customArrayInput.value = entry.array.join(', ');
+      sizeSlider.value = String(entry.array.length);
+      sizeValue.textContent = String(entry.array.length);
+      setBaseArray(entry.array, `Loaded saved workload: ${entry.label}.`);
+    });
+  });
+
+  savedWorkloadsBody.querySelectorAll('.delete-workload-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      const entry = savedWorkloads[index];
+      if (!entry) return;
+      savedWorkloads.splice(index, 1);
+      persistState();
+      renderSavedWorkloads();
+      setStatus(`Removed saved workload: ${entry.label}.`);
+    });
+  });
 }
 
 function updateNote() {
@@ -989,6 +1053,27 @@ function renderComparisonHistory() {
   renderStabilityRead();
 }
 
+function saveCurrentWorkload() {
+  if (!baseArray.length) {
+    setStatus('Generate or apply an array before saving a workload snapshot.');
+    return;
+  }
+
+  const serialized = baseArray.join(',');
+  savedWorkloads = savedWorkloads.filter((entry) => entry.serialized !== serialized);
+  savedWorkloads.unshift({
+    serialized,
+    array: [...baseArray],
+    label: buildWorkloadLabel(),
+    preview: baseArray.slice(0, 12).join(', '),
+    note: matchupSummaryEl?.textContent || diagnosticRecommendationEl?.textContent || 'Saved workload.',
+  });
+  savedWorkloads = savedWorkloads.slice(0, 5);
+  persistState();
+  renderSavedWorkloads();
+  setStatus('Saved the current workload for repeatable benchmark runs.');
+}
+
 function renderStabilityRead() {
   if (!stabilitySummaryEl || !stabilityStreakEl || !stabilitySpreadEl || !stabilityBaselineEl || !stabilityCueEl) return;
 
@@ -1460,6 +1545,7 @@ stepScrubber?.addEventListener('input', () => {
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
 gauntletBtn?.addEventListener('click', runPresetGauntlet);
+saveWorkloadBtn?.addEventListener('click', saveCurrentWorkload);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
 copyBriefBtn?.addEventListener('click', async () => {
@@ -1521,6 +1607,7 @@ if (persistedState) {
   if (persistedState.speed) speedSlider.value = String(persistedState.speed);
   if (typeof persistedState.customArray === 'string') customArrayInput.value = persistedState.customArray;
   if (Array.isArray(persistedState.comparisonHistory)) comparisonHistory = persistedState.comparisonHistory.slice(0, 5);
+  if (Array.isArray(persistedState.savedWorkloads)) savedWorkloads = persistedState.savedWorkloads.slice(0, 5);
 }
 const sharedArray = hydrateFromUrlState();
 
@@ -1540,6 +1627,7 @@ if (Array.isArray(sharedArray) && sharedArray.length >= 5) {
 }
 
 updateStatsDisplay();
+renderSavedWorkloads();
 renderComparisonHistory();
 renderContrastPlanner();
 
