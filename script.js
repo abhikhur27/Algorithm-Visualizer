@@ -36,6 +36,10 @@ const diagnosticDuplicatesEl = document.getElementById('diagnostic-duplicates');
 const diagnosticSpreadEl = document.getElementById('diagnostic-spread');
 const diagnosticInversionsEl = document.getElementById('diagnostic-inversions');
 const diagnosticRecommendationEl = document.getElementById('diagnostic-recommendation');
+const selectionVerdictSummaryEl = document.getElementById('selection-verdict-summary');
+const selectionVerdictBestEl = document.getElementById('selection-verdict-best');
+const selectionVerdictFallbackEl = document.getElementById('selection-verdict-fallback');
+const selectionVerdictWatchEl = document.getElementById('selection-verdict-watch');
 const profileTimeEl = document.getElementById('profile-time');
 const profileMemoryEl = document.getElementById('profile-memory');
 const profileStabilityEl = document.getElementById('profile-stability');
@@ -383,7 +387,57 @@ function updateDiagnostics() {
   fingerprintSummaryEl.textContent = `This array has ${monotonicRuns} monotonic run${monotonicRuns === 1 ? '' : 's'}, a largest adjacent jump of ${largestJump}, and ${uniqueCount} unique value${uniqueCount === 1 ? '' : 's'}.`;
   updateWorkloadMatchup({ sortedness, duplicateRate, inversionRatio });
   updateAlgorithmProfile({ sortedness, duplicateRate, inversionRatio });
+  updateSelectionVerdict({ sortedness, duplicateRate, inversionRatio });
   updateExperimentCoach({ sortedness, duplicateRate, inversionRatio, spread: Math.max(...baseArray) - Math.min(...baseArray) });
+}
+
+function updateSelectionVerdict(metrics = null, rows = lastComparisonRows) {
+  if (!selectionVerdictSummaryEl || !selectionVerdictBestEl || !selectionVerdictFallbackEl || !selectionVerdictWatchEl) {
+    return;
+  }
+
+  if (!baseArray.length) {
+    selectionVerdictSummaryEl.textContent = 'Generate an array to score the current picker.';
+    selectionVerdictBestEl.textContent = '-';
+    selectionVerdictFallbackEl.textContent = '-';
+    selectionVerdictWatchEl.textContent = '-';
+    return;
+  }
+
+  const resolvedMetrics = metrics || {
+    sortedness: Number.parseInt((diagnosticSortednessEl?.textContent || '0').replace('%', ''), 10) || 0,
+    duplicateRate: Number.parseInt((diagnosticDuplicatesEl?.textContent || '0').replace('%', ''), 10) || 0,
+    inversionRatio: (Number.parseInt((diagnosticInversionsEl?.textContent || '0').replace('%', ''), 10) || 0) / 100,
+  };
+
+  const selected = algorithmSelect.value;
+  const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.textContent || 'Current algorithm';
+  const winner = rows.find((row) => row.rank === 1) || rows[0];
+  const selectedRow = rows.find((row) => row.key === selected);
+  const forecast = matchupBestEl?.textContent || 'Compare All for a measured winner.';
+  const fallback = winner?.label || matchupBaselineEl?.textContent || 'Merge Sort';
+  const watch = matchupRiskEl?.textContent || diagnosticRecommendationEl?.textContent || 'Inspect the workload shape first.';
+
+  let summary = `${selectedLabel} is a reasonable teaching baseline on this workload.`;
+  if (selectedRow && winner) {
+    summary =
+      selectedRow.key === winner.key
+        ? `${selectedLabel} currently wins the benchmark table for this workload.`
+        : `${selectedLabel} loses to ${winner.label} here, so demo it as a contrast rather than the headline performer.`;
+  } else if (resolvedMetrics.sortedness >= 72 && selected === 'insertion') {
+    summary = 'Insertion Sort is the best storytelling pick because the array is already mostly ordered.';
+  } else if (resolvedMetrics.duplicateRate >= 40 && selected === 'radix') {
+    summary = 'Radix Sort has a strong story here because the input is duplicate-heavy and digit-friendly.';
+  } else if (resolvedMetrics.inversionRatio >= 0.58 && ['heap', 'quick'].includes(selected)) {
+    summary = `${selectedLabel} fits the disorder profile well enough to anchor the demo.`;
+  } else if (selected === 'bubble') {
+    summary = 'Bubble Sort is best used here as a visual baseline, not the main performance claim.';
+  }
+
+  selectionVerdictSummaryEl.textContent = summary;
+  selectionVerdictBestEl.textContent = forecast;
+  selectionVerdictFallbackEl.textContent = fallback;
+  selectionVerdictWatchEl.textContent = watch;
 }
 
 function updateExperimentCoach(metrics = null) {
@@ -1377,6 +1431,7 @@ function setBaseArray(nextBase, message) {
   renderArray();
   updateDiagnostics();
   updateAlgorithmProfile();
+  updateSelectionVerdict();
   updateExperimentCoach();
   updateStatsDisplay();
   updateOperationLens();
@@ -1593,6 +1648,7 @@ algorithmSelect.addEventListener('change', () => {
   stepIndex = 0;
   updateNote();
   updateAlgorithmProfile();
+  updateSelectionVerdict();
   updateExperimentCoach();
   setStatus('Algorithm changed. Press Start to run the new strategy.');
   renderArray();
@@ -1630,6 +1686,7 @@ updateStatsDisplay();
 renderSavedWorkloads();
 renderComparisonHistory();
 renderContrastPlanner();
+updateSelectionVerdict();
 
 document.addEventListener('keydown', (event) => {
   if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isEditableTarget(event.target)) {

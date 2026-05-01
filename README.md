@@ -19,6 +19,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
 - Experiment coach recommends the next preset contrast that makes the selected algorithm's tradeoff easiest to explain in a demo.
+- Selection verdict board turns the current sorter into a pitch with a best use, fallback, and watch-out.
 - Operation counters:
   - Comparisons
   - Swaps
