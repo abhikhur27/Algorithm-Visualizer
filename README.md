@@ -15,6 +15,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Preset gauntlet benchmarks every implemented sorter across randomized, nearly-sorted, reversed, and few-unique workloads in one pass.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
 - Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
+- Selected-algorithm story board turns the current picker into a best-demo angle, watch-out, and history-aware portfolio pitch.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.

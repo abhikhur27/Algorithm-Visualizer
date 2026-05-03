@@ -90,6 +90,10 @@ const contrastAnchorEl = document.getElementById('contrast-anchor');
 const contrastOpponentEl = document.getElementById('contrast-opponent');
 const contrastAngleEl = document.getElementById('contrast-angle');
 const contrastHistoryEl = document.getElementById('contrast-history');
+const selectionStorySummaryEl = document.getElementById('selection-story-summary');
+const selectionStoryBestEl = document.getElementById('selection-story-best');
+const selectionStoryRiskEl = document.getElementById('selection-story-risk');
+const selectionStoryHistoryEl = document.getElementById('selection-story-history');
 const gauntletSummaryEl = document.getElementById('gauntlet-summary');
 const gauntletLeaderEl = document.getElementById('gauntlet-leader');
 const gauntletBaselineEl = document.getElementById('gauntlet-baseline');
@@ -1258,6 +1262,47 @@ function renderContrastPlanner(rows = lastComparisonRows) {
       : 'Winner history is still mixed, so this run is best framed as one workload-specific read rather than a universal rule.';
 }
 
+function renderSelectionStory(rows = lastComparisonRows) {
+  if (!selectionStorySummaryEl || !selectionStoryBestEl || !selectionStoryRiskEl || !selectionStoryHistoryEl) return;
+
+  if (!rows.length) {
+    selectionStorySummaryEl.textContent = 'Run Compare All to turn the current algorithm into a portfolio-ready pitch.';
+    selectionStoryBestEl.textContent = '-';
+    selectionStoryRiskEl.textContent = '-';
+    selectionStoryHistoryEl.textContent = '-';
+    return;
+  }
+
+  const selected = rows.find((row) => row.key === algorithmSelect.value) || rows[0];
+  const leader = rows[0];
+  const worst = rows[rows.length - 1];
+  const selectedRank = rows.findIndex((row) => row.key === selected.key) + 1;
+  const gapToLeader = selected.total - leader.total;
+  const selectedWins = comparisonHistory.filter((entry) => entry.best === selected.label).length;
+
+  if (selected.key === leader.key) {
+    selectionStorySummaryEl.textContent = `${selected.label} is the current winner, so the pitch can lead with workload fit instead of apologizing for overhead.`;
+    selectionStoryBestEl.textContent = `Use this array as the showcase case: ${selected.label} leads by ${Math.max(0, rows[1]?.total - selected.total || 0)} ops.`;
+  } else {
+    selectionStorySummaryEl.textContent = `${selected.label} ranks #${selectedRank} on this workload, so the pitch should frame it as a deliberate tradeoff rather than a universal best pick.`;
+    selectionStoryBestEl.textContent = gapToLeader <= Math.max(12, leader.total * 0.12)
+      ? `It stays close to ${leader.label}, which makes it defensible when its behavior is easier to teach.`
+      : `Use it when the lesson is ${algorithmProfiles[selected.key]?.sweetSpot || 'its algorithmic behavior'}, not pure operation count.`;
+  }
+
+  selectionStoryRiskEl.textContent =
+    selected.key === worst.key
+      ? `${selected.label} is the heaviest current choice, so contrast it directly against ${leader.label} to make the mismatch visible fast.`
+      : `${worst.label} is the real misfit here; keep the watch-out focused on when ${selected.label} would drift toward that same failure mode.`;
+
+  selectionStoryHistoryEl.textContent =
+    selectedWins >= 2
+      ? `${selected.label} has already won ${selectedWins} saved workload snapshots, so it has repeatable demo value.`
+      : selectedWins === 1
+        ? `${selected.label} has one recent win in saved history, so it already has at least one credible showcase workload.`
+        : `${selected.label} has not won recent saved snapshots yet, so keep the narrative workload-specific and contrast-driven.`;
+}
+
 function runPresetGauntlet() {
   if (!gauntletSummaryEl || !gauntletLeaderEl || !gauntletBaselineEl || !gauntletUpsetEl || !gauntletCueEl) return;
 
@@ -1406,6 +1451,7 @@ function compareAlgorithms() {
   renderComparisonHistory();
   persistState();
   renderContrastPlanner(rows);
+  renderSelectionStory(rows);
 
   setStatus('Compared all algorithms on the current array.');
 }
@@ -1736,6 +1782,7 @@ updateStatsDisplay();
 renderSavedWorkloads();
 renderComparisonHistory();
 renderContrastPlanner();
+renderSelectionStory();
 updateSelectionVerdict();
 
 document.addEventListener('keydown', (event) => {
