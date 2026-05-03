@@ -256,6 +256,35 @@ function buildWorkloadLabel() {
   return `${algorithmLabel} | ${baseArray.length} values | ${sortedness} sorted | ${duplicates} duplicates`;
 }
 
+function forecastAlgorithmForArray(values) {
+  if (!Array.isArray(values) || !values.length) {
+    return { key: 'quick', label: 'Quick Sort' };
+  }
+
+  const pairCount = Math.max(1, (values.length * (values.length - 1)) / 2);
+  let inversions = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    for (let j = i + 1; j < values.length; j += 1) {
+      if (values[i] > values[j]) inversions += 1;
+    }
+  }
+
+  let adjacentSorted = 0;
+  for (let i = 1; i < values.length; i += 1) {
+    if (values[i] >= values[i - 1]) adjacentSorted += 1;
+  }
+
+  const uniqueCount = new Set(values).size;
+  const duplicateRate = Math.round(((values.length - uniqueCount) / Math.max(1, values.length)) * 100);
+  const inversionRatio = inversions / pairCount;
+  const sortedness = Math.round((adjacentSorted / Math.max(1, values.length - 1)) * 100);
+
+  if (sortedness >= 82) return { key: 'insertion', label: 'Insertion Sort' };
+  if (duplicateRate >= 35) return { key: 'merge', label: 'Merge Sort' };
+  if (inversionRatio >= 0.72) return { key: 'heap', label: 'Heap Sort' };
+  return { key: 'quick', label: 'Quick Sort' };
+}
+
 function renderSavedWorkloads() {
   if (!savedWorkloadsBody || !savedWorkloadsSummary) return;
 
@@ -274,8 +303,10 @@ function renderSavedWorkloads() {
           <strong>${entry.label}</strong>
           <p>${entry.preview}</p>
           <p>${entry.note}</p>
+          <p><strong>Forecast:</strong> ${entry.recommendedAlgorithmLabel || 'Quick Sort'}</p>
           <div class="card-actions">
             <button class="load-workload-btn" type="button" data-index="${index}">Load</button>
+            <button class="load-forecast-btn" type="button" data-index="${index}">Load + Forecast</button>
             <button class="delete-workload-btn" type="button" data-index="${index}">Delete</button>
           </div>
         </article>
@@ -292,6 +323,22 @@ function renderSavedWorkloads() {
       sizeSlider.value = String(entry.array.length);
       sizeValue.textContent = String(entry.array.length);
       setBaseArray(entry.array, `Loaded saved workload: ${entry.label}.`);
+    });
+  });
+
+  savedWorkloadsBody.querySelectorAll('.load-forecast-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.index);
+      const entry = savedWorkloads[index];
+      if (!entry) return;
+      customArrayInput.value = entry.array.join(', ');
+      sizeSlider.value = String(entry.array.length);
+      sizeValue.textContent = String(entry.array.length);
+      if (entry.recommendedAlgorithmKey && algorithmGenerators[entry.recommendedAlgorithmKey]) {
+        algorithmSelect.value = entry.recommendedAlgorithmKey;
+        updateNote();
+      }
+      setBaseArray(entry.array, `Loaded saved workload with forecasted best fit: ${entry.recommendedAlgorithmLabel || 'Quick Sort'}.`);
     });
   });
 
@@ -1114,6 +1161,7 @@ function saveCurrentWorkload() {
   }
 
   const serialized = baseArray.join(',');
+  const forecast = forecastAlgorithmForArray(baseArray);
   savedWorkloads = savedWorkloads.filter((entry) => entry.serialized !== serialized);
   savedWorkloads.unshift({
     serialized,
@@ -1121,6 +1169,8 @@ function saveCurrentWorkload() {
     label: buildWorkloadLabel(),
     preview: baseArray.slice(0, 12).join(', '),
     note: matchupSummaryEl?.textContent || diagnosticRecommendationEl?.textContent || 'Saved workload.',
+    recommendedAlgorithmKey: forecast.key,
+    recommendedAlgorithmLabel: forecast.label,
   });
   savedWorkloads = savedWorkloads.slice(0, 5);
   persistState();
