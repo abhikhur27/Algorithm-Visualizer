@@ -330,6 +330,34 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
+            <h2>Replay Budget</h2>
+            <p>Estimate how long the current run will take to show and whether the replay is dense enough for a live demo.</p>
+          </div>
+          <p id="replay-budget-summary" class="comparison-summary">Generate a run to estimate its playback budget.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Projected Runtime</h3>
+            <p id="replay-budget-runtime">-</p>
+          </article>
+          <article>
+            <h3>Ops / Second</h3>
+            <p id="replay-budget-pace">-</p>
+          </article>
+          <article>
+            <h3>Checkpoint Density</h3>
+            <p id="replay-budget-density">-</p>
+          </article>
+          <article>
+            <h3>Demo Cue</h3>
+            <p id="replay-budget-cue">-</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
             <h2>Benchmark Verdict</h2>
             <p>Turn the compare-all snapshot into an explicit recommendation.</p>
           </div>

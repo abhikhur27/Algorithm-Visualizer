@@ -65,6 +65,11 @@ const operationCurrentEl = document.getElementById('operation-current');
 const operationCompareShareEl = document.getElementById('operation-compare-share');
 const operationSwapShareEl = document.getElementById('operation-swap-share');
 const operationWriteShareEl = document.getElementById('operation-write-share');
+const replayBudgetSummaryEl = document.getElementById('replay-budget-summary');
+const replayBudgetRuntimeEl = document.getElementById('replay-budget-runtime');
+const replayBudgetPaceEl = document.getElementById('replay-budget-pace');
+const replayBudgetDensityEl = document.getElementById('replay-budget-density');
+const replayBudgetCueEl = document.getElementById('replay-budget-cue');
 const teachingCutSummaryEl = document.getElementById('teaching-cut-summary');
 const teachingCutListEl = document.getElementById('teaching-cut-list');
 const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
@@ -770,7 +775,46 @@ function updateOperationLens() {
   operationCompareShareEl.textContent = stepShare(summary.comparisons, summary.total);
   operationSwapShareEl.textContent = stepShare(summary.swaps, summary.total);
   operationWriteShareEl.textContent = stepShare(summary.writes, summary.total);
+  updateReplayBudget(summary);
   updateTeachingCut(summary);
+}
+
+function updateReplayBudget(summary = summarizeOperations(steps)) {
+  if (!replayBudgetSummaryEl || !replayBudgetRuntimeEl || !replayBudgetPaceEl || !replayBudgetDensityEl || !replayBudgetCueEl) {
+    return;
+  }
+
+  if (!summary.total) {
+    replayBudgetSummaryEl.textContent = 'Generate a run to estimate its playback budget.';
+    replayBudgetRuntimeEl.textContent = '-';
+    replayBudgetPaceEl.textContent = '-';
+    replayBudgetDensityEl.textContent = '-';
+    replayBudgetCueEl.textContent = '-';
+    return;
+  }
+
+  const speedMs = Number(speedSlider.value) || 80;
+  const runtimeSeconds = (summary.total * speedMs) / 1000;
+  const checkpoints = Math.max(1, Math.ceil(summary.total / 5));
+  const opsPerSecond = 1000 / speedMs;
+  const density =
+    summary.total <= 90
+      ? 'Tight'
+      : summary.total <= 220
+        ? 'Walkthrough-ready'
+        : 'Dense';
+  const cue =
+    runtimeSeconds <= 12
+      ? 'This replay is compact enough to run straight through in a live walkthrough.'
+      : runtimeSeconds <= 24
+        ? 'Use the teaching cut or scrubber so the demo lands on the turning points instead of narrating every operation.'
+        : 'This run is too long for raw playback; benchmark it first, then scrub only the checkpoints that prove the algorithm story.';
+
+  replayBudgetSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.textContent || 'Current algorithm'} would take about ${runtimeSeconds.toFixed(1)}s to replay at the current speed.`;
+  replayBudgetRuntimeEl.textContent = `${runtimeSeconds.toFixed(1)}s`;
+  replayBudgetPaceEl.textContent = `${opsPerSecond.toFixed(1)} ops/s`;
+  replayBudgetDensityEl.textContent = `${density} | ~${checkpoints} teaching beats`;
+  replayBudgetCueEl.textContent = cue;
 }
 
 function updateTeachingCut(summary) {
