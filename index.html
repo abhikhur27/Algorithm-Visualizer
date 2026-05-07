@@ -459,6 +459,34 @@
         </div>
         <div id="comparison-history-body" class="comparison-history-list"></div>
 
+        <section class="diagnostics-panel" aria-live="polite">
+          <div class="comparison-head">
+            <div>
+              <h2>Benchmark Confidence</h2>
+              <p>Read whether the current winner is a one-off result or a repeatable story across saved workload snapshots.</p>
+            </div>
+            <p id="benchmark-confidence-summary" class="comparison-summary">Run Compare All a few times to turn benchmark memory into confidence.</p>
+          </div>
+          <div class="diagnostics-grid">
+            <article>
+              <h3>Evidence</h3>
+              <p id="benchmark-confidence-evidence">-</p>
+            </article>
+            <article>
+              <h3>Winner Churn</h3>
+              <p id="benchmark-confidence-churn">-</p>
+            </article>
+            <article>
+              <h3>Anchor</h3>
+              <p id="benchmark-confidence-anchor">-</p>
+            </article>
+            <article>
+              <h3>Cue</h3>
+              <p id="benchmark-confidence-cue">-</p>
+            </article>
+          </div>
+        </section>
+
         <div class="comparison-head comparison-history-head">
           <div>
             <h2>Stability Read</h2>

@@ -85,6 +85,11 @@ const savedWorkloadsSummary = document.getElementById('saved-workloads-summary')
 const savedWorkloadsBody = document.getElementById('saved-workloads-body');
 const comparisonHistorySummary = document.getElementById('comparison-history-summary');
 const comparisonHistoryBody = document.getElementById('comparison-history-body');
+const benchmarkConfidenceSummaryEl = document.getElementById('benchmark-confidence-summary');
+const benchmarkConfidenceEvidenceEl = document.getElementById('benchmark-confidence-evidence');
+const benchmarkConfidenceChurnEl = document.getElementById('benchmark-confidence-churn');
+const benchmarkConfidenceAnchorEl = document.getElementById('benchmark-confidence-anchor');
+const benchmarkConfidenceCueEl = document.getElementById('benchmark-confidence-cue');
 const stabilitySummaryEl = document.getElementById('stability-summary');
 const stabilityStreakEl = document.getElementById('stability-streak');
 const stabilitySpreadEl = document.getElementById('stability-spread');
@@ -1186,6 +1191,7 @@ function renderComparisonHistory() {
     comparisonHistorySummary.textContent = 'No benchmark history saved yet.';
     comparisonHistoryBody.innerHTML = '<article class="comparison-history-item"><strong>Waiting for a compare-all run.</strong><p>Benchmark a workload to keep a reusable before/after snapshot for future demos.</p></article>';
     renderStabilityRead();
+    renderBenchmarkConfidence();
     return;
   }
 
@@ -1200,6 +1206,43 @@ function renderComparisonHistory() {
     `)
     .join('');
   renderStabilityRead();
+  renderBenchmarkConfidence();
+}
+
+function renderBenchmarkConfidence() {
+  if (!benchmarkConfidenceSummaryEl || !benchmarkConfidenceEvidenceEl || !benchmarkConfidenceChurnEl || !benchmarkConfidenceAnchorEl || !benchmarkConfidenceCueEl) {
+    return;
+  }
+
+  if (!comparisonHistory.length) {
+    benchmarkConfidenceSummaryEl.textContent = 'Run Compare All a few times to turn benchmark memory into confidence.';
+    benchmarkConfidenceEvidenceEl.textContent = '-';
+    benchmarkConfidenceChurnEl.textContent = '-';
+    benchmarkConfidenceAnchorEl.textContent = '-';
+    benchmarkConfidenceCueEl.textContent = '-';
+    return;
+  }
+
+  const winners = comparisonHistory.map((entry) => entry.best);
+  const counts = winners.reduce((acc, winner) => {
+    acc[winner] = (acc[winner] || 0) + 1;
+    return acc;
+  }, {});
+  const uniqueWinners = Object.keys(counts);
+  const anchor = uniqueWinners.sort((a, b) => counts[b] - counts[a])[0];
+  const churn = uniqueWinners.length / Math.max(1, comparisonHistory.length);
+
+  benchmarkConfidenceSummaryEl.textContent =
+    uniqueWinners.length === 1
+      ? `${anchor} has been repeatable across every saved snapshot so far.`
+      : `${anchor} is the strongest recurring winner, but workload sensitivity is still part of the story.`;
+  benchmarkConfidenceEvidenceEl.textContent = `${comparisonHistory.length} saved snapshot${comparisonHistory.length === 1 ? '' : 's'}`;
+  benchmarkConfidenceChurnEl.textContent = `${uniqueWinners.length} winner${uniqueWinners.length === 1 ? '' : 's'} | churn ${(churn * 100).toFixed(0)}%`;
+  benchmarkConfidenceAnchorEl.textContent = `${anchor} (${counts[anchor]} win${counts[anchor] === 1 ? '' : 's'})`;
+  benchmarkConfidenceCueEl.textContent =
+    comparisonHistory.length >= 4 && uniqueWinners.length <= 2
+      ? 'You have enough repeated evidence to pitch a preferred sorter plus one boundary case.'
+      : 'Treat the latest winner as workload-specific until more saved contrasts stabilize the story.';
 }
 
 function saveCurrentWorkload() {
