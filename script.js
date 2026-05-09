@@ -104,6 +104,11 @@ const selectionStorySummaryEl = document.getElementById('selection-story-summary
 const selectionStoryBestEl = document.getElementById('selection-story-best');
 const selectionStoryRiskEl = document.getElementById('selection-story-risk');
 const selectionStoryHistoryEl = document.getElementById('selection-story-history');
+const selectionTrackSummaryEl = document.getElementById('selection-track-summary');
+const selectionTrackFinishesEl = document.getElementById('selection-track-finishes');
+const selectionTrackBestEl = document.getElementById('selection-track-best');
+const selectionTrackMedianEl = document.getElementById('selection-track-median');
+const selectionTrackCueEl = document.getElementById('selection-track-cue');
 const gauntletSummaryEl = document.getElementById('gauntlet-summary');
 const gauntletLeaderEl = document.getElementById('gauntlet-leader');
 const gauntletBaselineEl = document.getElementById('gauntlet-baseline');
@@ -1390,6 +1395,37 @@ function renderSelectionStory(rows = lastComparisonRows) {
         : `${selected.label} has not won recent saved snapshots yet, so keep the narrative workload-specific and contrast-driven.`;
 }
 
+function renderSelectionTrackRecord(rows = lastComparisonRows) {
+  if (!selectionTrackSummaryEl || !selectionTrackFinishesEl || !selectionTrackBestEl || !selectionTrackMedianEl || !selectionTrackCueEl) {
+    return;
+  }
+
+  if (!rows.length) {
+    selectionTrackSummaryEl.textContent = 'Run Compare All a few times to build a track record for the current picker.';
+    selectionTrackFinishesEl.textContent = '-';
+    selectionTrackBestEl.textContent = '-';
+    selectionTrackMedianEl.textContent = '-';
+    selectionTrackCueEl.textContent = '-';
+    return;
+  }
+
+  const selected = rows.find((row) => row.key === algorithmSelect.value) || rows[0];
+  const selectedRank = rows.findIndex((row) => row.key === selected.key) + 1;
+  const selectedWins = comparisonHistory.filter((entry) => entry.best === selected.label).length;
+  const leader = rows[0];
+  const leaderWins = comparisonHistory.filter((entry) => entry.best === leader.label).length;
+  const gapToLeader = selected.total - leader.total;
+
+  selectionTrackSummaryEl.textContent = `${selected.label} is currently ranking #${selectedRank} with ${comparisonHistory.length} saved compare-all snapshot${comparisonHistory.length === 1 ? '' : 's'} on the local tape.`;
+  selectionTrackFinishesEl.textContent = selectedRank === 1 ? 'Current finish: winner on this workload.' : `Current finish: #${selectedRank}, ${gapToLeader} operations behind ${leader.label}.`;
+  selectionTrackBestEl.textContent = selectedWins ? `${selectedWins} saved win${selectedWins === 1 ? '' : 's'} in recent history.` : 'No saved wins yet.';
+  selectionTrackMedianEl.textContent = leader.key === selected.key ? `${leader.label} is also the current tape leader.` : `${leader.label} owns ${leaderWins} saved win${leaderWins === 1 ? '' : 's'} and is the current pressure baseline.`;
+  selectionTrackCueEl.textContent =
+    selectedRank === 1 || selectedWins >= 2
+      ? `${selected.label} is repeatable enough to pitch as a dependable fit, not just a one-array curiosity.`
+      : `${selected.label} works better as a contrast case: explain when its behavior is worth the extra work instead of claiming it as the default winner.`;
+}
+
 function runPresetGauntlet() {
   if (!gauntletSummaryEl || !gauntletLeaderEl || !gauntletBaselineEl || !gauntletUpsetEl || !gauntletCueEl) return;
 
@@ -1539,6 +1575,7 @@ function compareAlgorithms() {
   persistState();
   renderContrastPlanner(rows);
   renderSelectionStory(rows);
+  renderSelectionTrackRecord(rows);
 
   setStatus('Compared all algorithms on the current array.');
 }

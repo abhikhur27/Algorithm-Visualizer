@@ -16,6 +16,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
 - Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
 - Selected-algorithm story board turns the current picker into a best-demo angle, watch-out, and history-aware portfolio pitch.
+- Selection track record board reads the current picker against the local winner tape so the pitch can lean on repeatability, not one lucky benchmark.
 - Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
 - Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
