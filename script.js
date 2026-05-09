@@ -70,6 +70,11 @@ const replayBudgetRuntimeEl = document.getElementById('replay-budget-runtime');
 const replayBudgetPaceEl = document.getElementById('replay-budget-pace');
 const replayBudgetDensityEl = document.getElementById('replay-budget-density');
 const replayBudgetCueEl = document.getElementById('replay-budget-cue');
+const volatilitySummaryEl = document.getElementById('volatility-summary');
+const volatilityCompareRunEl = document.getElementById('volatility-compare-run');
+const volatilityWriteRunEl = document.getElementById('volatility-write-run');
+const volatilityTurningPointEl = document.getElementById('volatility-turning-point');
+const volatilityCueEl = document.getElementById('volatility-cue');
 const teachingCutSummaryEl = document.getElementById('teaching-cut-summary');
 const teachingCutListEl = document.getElementById('teaching-cut-list');
 const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
@@ -786,7 +791,65 @@ function updateOperationLens() {
   operationSwapShareEl.textContent = stepShare(summary.swaps, summary.total);
   operationWriteShareEl.textContent = stepShare(summary.writes, summary.total);
   updateReplayBudget(summary);
+  updateVolatilityBoard(summary);
   updateTeachingCut(summary);
+}
+
+function updateVolatilityBoard(summary = summarizeOperations(steps)) {
+  if (!volatilitySummaryEl || !volatilityCompareRunEl || !volatilityWriteRunEl || !volatilityTurningPointEl || !volatilityCueEl) {
+    return;
+  }
+
+  if (!summary.total) {
+    volatilitySummaryEl.textContent = 'Generate a run to inspect its burstiness and pacing shifts.';
+    volatilityCompareRunEl.textContent = '-';
+    volatilityWriteRunEl.textContent = '-';
+    volatilityTurningPointEl.textContent = '-';
+    volatilityCueEl.textContent = '-';
+    return;
+  }
+
+  let longestCompareRun = 0;
+  let longestWriteRun = 0;
+  let currentCompareRun = 0;
+  let currentWriteRun = 0;
+  let turningPointIndex = 0;
+  let turningPointScore = -1;
+
+  steps.forEach((step, index) => {
+    currentCompareRun = step.type === 'compare' ? currentCompareRun + 1 : 0;
+    currentWriteRun = step.type === 'overwrite' ? currentWriteRun + 1 : 0;
+    longestCompareRun = Math.max(longestCompareRun, currentCompareRun);
+    longestWriteRun = Math.max(longestWriteRun, currentWriteRun);
+
+    const windowSteps = steps.slice(Math.max(0, index - 12), index + 1);
+    const compareWindow = windowSteps.filter((item) => item.type === 'compare').length;
+    const writeWindow = windowSteps.filter((item) => item.type === 'overwrite').length;
+    const score = Math.abs(compareWindow - writeWindow);
+    if (score > turningPointScore) {
+      turningPointScore = score;
+      turningPointIndex = index;
+    }
+  });
+
+  const turningPointStep = steps[turningPointIndex];
+  const posture =
+    longestWriteRun >= 6
+      ? 'back-loaded rebuild'
+      : longestCompareRun >= 10
+        ? 'scan-heavy churn'
+        : 'fairly even pacing';
+
+  volatilitySummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} shows ${posture} on this workload.`;
+  volatilityCompareRunEl.textContent = `${longestCompareRun} compare step${longestCompareRun === 1 ? '' : 's'} in a row`;
+  volatilityWriteRunEl.textContent = `${longestWriteRun} write step${longestWriteRun === 1 ? '' : 's'} in a row`;
+  volatilityTurningPointEl.textContent = `Step ${turningPointIndex + 1}: ${describeStep(turningPointStep, turningPointIndex)}`;
+  volatilityCueEl.textContent =
+    longestWriteRun >= 6
+      ? 'Skip to the write burst if the goal is to show when the algorithm finally cashes in its earlier comparisons.'
+      : longestCompareRun >= 10
+        ? 'Narrate the long compare run as proof that this algorithm spends time scouting before it commits to movement.'
+        : 'This run is balanced enough that a straight replay will not feel like dead air.';
 }
 
 function updateReplayBudget(summary = summarizeOperations(steps)) {

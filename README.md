@@ -22,6 +22,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
 - Experiment coach recommends the next preset contrast that makes the selected algorithm's tradeoff easiest to explain in a demo.
 - Selection verdict board turns the current sorter into a pitch with a best use, fallback, and watch-out.
+- Run volatility board detects whether the replay is smooth, scan-heavy, or back-loaded before you present it live.
 - Operation counters:
   - Comparisons
   - Swaps
