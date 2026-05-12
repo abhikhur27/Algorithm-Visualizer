@@ -75,6 +75,11 @@ const volatilityCompareRunEl = document.getElementById('volatility-compare-run')
 const volatilityWriteRunEl = document.getElementById('volatility-write-run');
 const volatilityTurningPointEl = document.getElementById('volatility-turning-point');
 const volatilityCueEl = document.getElementById('volatility-cue');
+const operationPostureSummaryEl = document.getElementById('operation-posture-summary');
+const operationPostureDominantEl = document.getElementById('operation-posture-dominant');
+const operationPostureRhythmEl = document.getElementById('operation-posture-rhythm');
+const operationPostureAngleEl = document.getElementById('operation-posture-angle');
+const operationPostureWatchEl = document.getElementById('operation-posture-watch');
 const teachingCutSummaryEl = document.getElementById('teaching-cut-summary');
 const teachingCutListEl = document.getElementById('teaching-cut-list');
 const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
@@ -792,6 +797,7 @@ function updateOperationLens() {
   operationWriteShareEl.textContent = stepShare(summary.writes, summary.total);
   updateReplayBudget(summary);
   updateVolatilityBoard(summary);
+  updateOperationPosture(summary);
   updateTeachingCut(summary);
 }
 
@@ -850,6 +856,74 @@ function updateVolatilityBoard(summary = summarizeOperations(steps)) {
       : longestCompareRun >= 10
         ? 'Narrate the long compare run as proof that this algorithm spends time scouting before it commits to movement.'
         : 'This run is balanced enough that a straight replay will not feel like dead air.';
+}
+
+function updateOperationPosture(summary = summarizeOperations(steps)) {
+  if (
+    !operationPostureSummaryEl ||
+    !operationPostureDominantEl ||
+    !operationPostureRhythmEl ||
+    !operationPostureAngleEl ||
+    !operationPostureWatchEl
+  ) {
+    return;
+  }
+
+  if (!summary.total) {
+    operationPostureSummaryEl.textContent = 'Generate a run to classify its operation posture.';
+    operationPostureDominantEl.textContent = '-';
+    operationPostureRhythmEl.textContent = '-';
+    operationPostureAngleEl.textContent = '-';
+    operationPostureWatchEl.textContent = '-';
+    return;
+  }
+
+  const compareShare = summary.comparisons / Math.max(1, summary.total);
+  const swapShare = summary.swaps / Math.max(1, summary.total);
+  const writeShare = summary.writes / Math.max(1, summary.total);
+
+  let posture = 'balanced';
+  let angle = 'This run is balanced enough that you can teach both search and commitment without forcing one story.';
+  let watch = 'Do not over-narrate one metric; this replay is interesting because several operation types stay in play.';
+
+  if (compareShare >= 0.58) {
+    posture = 'scout-heavy';
+    angle = 'Frame the replay around reconnaissance: the algorithm spends most of its time learning local order before it commits.';
+    watch = 'If you play every compare step straight through, the audience may miss the eventual payoff. Jump to the first decisive swap or overwrite.';
+  } else if (writeShare >= 0.34) {
+    posture = 'rebuild-heavy';
+    angle = 'Frame the replay around reconstruction: the algorithm earns its clarity when sorted structure gets written back into place.';
+    watch = 'Do not pitch this like a pure swap race. The visual story lives in rebuild bursts and landing zones.';
+  } else if (swapShare >= 0.18) {
+    posture = 'exchange-heavy';
+    angle = 'Frame the replay around direct corrections: this sorter keeps paying down local disorder through visible exchanges.';
+    watch = 'Use a scrambled workload. Cleaner arrays can make the swap story feel weaker than it really is.';
+  }
+
+  let longestNonCompareRun = 0;
+  let currentNonCompareRun = 0;
+  steps.forEach((step) => {
+    currentNonCompareRun = step.type === 'compare' ? 0 : currentNonCompareRun + 1;
+    longestNonCompareRun = Math.max(longestNonCompareRun, currentNonCompareRun);
+  });
+
+  const rhythm =
+    longestNonCompareRun >= 8
+      ? 'bursty commits'
+      : longestNonCompareRun >= 4
+        ? 'short commitment bursts'
+        : 'frequent small commits';
+
+  operationPostureSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} reads as ${posture} with ${rhythm} on this workload.`;
+  operationPostureDominantEl.textContent =
+    compareShare >= writeShare && compareShare >= swapShare
+      ? `Comparisons (${stepShare(summary.comparisons, summary.total)})`
+      : writeShare >= swapShare
+        ? `Writes (${stepShare(summary.writes, summary.total)})`
+        : `Swaps (${stepShare(summary.swaps, summary.total)})`;
+  operationPostureRhythmEl.textContent = `${rhythm} | longest non-compare streak ${longestNonCompareRun}`;
+  operationPostureAngleEl.textContent = angle;
+  operationPostureWatchEl.textContent = watch;
 }
 
 function updateReplayBudget(summary = summarizeOperations(steps)) {

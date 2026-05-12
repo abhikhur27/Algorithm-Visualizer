@@ -28,6 +28,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
   - Swaps
   - Writes
 - Replay teaching cut that picks five narration checkpoints from the generated operation stream.
+- Operation posture board that classifies each replay as scout-heavy, exchange-heavy, or rebuild-heavy before a live walkthrough.
 - Responsive bar visualization with color-coded state legend.
 
 ## Technical Design
