@@ -24,6 +24,7 @@ const backBtn = document.getElementById('back-btn');
 const resetBtn = document.getElementById('reset-btn');
 const statusText = document.getElementById('status-text');
 const stepScrubber = document.getElementById('step-scrubber');
+const scrubberJumpButtons = Array.from(document.querySelectorAll('.scrubber-jump-btn'));
 const scrubberValue = document.getElementById('scrubber-value');
 const comparisonsEl = document.getElementById('comparisons');
 const swapsEl = document.getElementById('swaps');
@@ -1008,6 +1009,21 @@ function rebuildToStep(targetStep) {
   }
 }
 
+function jumpToScrubberCheckpoint(fraction) {
+  if (isRunning || !steps.length) {
+    setStatus('Generate a replay first so the checkpoint buttons have somewhere to land.');
+    return;
+  }
+
+  const targetStep = Math.min(steps.length, Math.max(0, Math.round(steps.length * fraction)));
+  stepIndex = targetStep;
+  rebuildToStep(stepIndex);
+  renderArray(stepIndex >= steps.length ? { done: true } : {});
+  updateStatsDisplay();
+  updateOperationLens();
+  setStatus(`Jumped to checkpoint ${Math.round(fraction * 100)}% (${stepIndex}/${steps.length}).`);
+}
+
 function runOneStep() {
   if (stepIndex >= steps.length) {
     finishPlayback();
@@ -1952,6 +1968,12 @@ stepScrubber?.addEventListener('input', () => {
   updateStatsDisplay();
   updateOperationLens();
   setStatus(`Scrubbed to ${stepIndex}/${steps.length}.`);
+});
+
+scrubberJumpButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    jumpToScrubberCheckpoint(Number(button.dataset.jump || '0'));
+  });
 });
 
 resetBtn.addEventListener('click', resetToBase);
