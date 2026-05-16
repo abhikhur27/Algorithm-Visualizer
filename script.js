@@ -90,6 +90,11 @@ const benchmarkStableEl = document.getElementById('benchmark-stable');
 const benchmarkRunnerUpEl = document.getElementById('benchmark-runner-up');
 const benchmarkSelectedGapEl = document.getElementById('benchmark-selected-gap');
 const benchmarkCoachEl = document.getElementById('benchmark-coach');
+const benchmarkPressureSummaryEl = document.getElementById('benchmark-pressure-summary');
+const benchmarkPressureLeaderEl = document.getElementById('benchmark-pressure-leader');
+const benchmarkPressureCurrentEl = document.getElementById('benchmark-pressure-current');
+const benchmarkPressureGapEl = document.getElementById('benchmark-pressure-gap');
+const benchmarkPressureCueEl = document.getElementById('benchmark-pressure-cue');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const savedWorkloadsSummary = document.getElementById('saved-workloads-summary');
@@ -1647,6 +1652,7 @@ function updateBenchmarkVerdict(rows = []) {
     if (benchmarkRunnerUpEl) benchmarkRunnerUpEl.textContent = '-';
     if (benchmarkSelectedGapEl) benchmarkSelectedGapEl.textContent = '-';
     benchmarkCoachEl.textContent = '-';
+    renderBenchmarkPressure();
     return;
   }
 
@@ -1685,6 +1691,50 @@ function updateBenchmarkVerdict(rows = []) {
   } else {
     benchmarkCoachEl.textContent = `${best.label} is the clear efficiency winner, while ${stablePick.label} remains the safer stable reference point.`;
   }
+
+  renderBenchmarkPressure(rows);
+}
+
+function renderBenchmarkPressure(rows = lastComparisonRows) {
+  if (!benchmarkPressureSummaryEl || !benchmarkPressureLeaderEl || !benchmarkPressureCurrentEl || !benchmarkPressureGapEl || !benchmarkPressureCueEl) {
+    return;
+  }
+
+  if (!rows.length) {
+    benchmarkPressureSummaryEl.textContent = 'Run Compare All to measure how much pressure is on the current algorithm pick.';
+    benchmarkPressureLeaderEl.textContent = '-';
+    benchmarkPressureCurrentEl.textContent = '-';
+    benchmarkPressureGapEl.textContent = '-';
+    benchmarkPressureCueEl.textContent = '-';
+    return;
+  }
+
+  const leader = rows[0];
+  const selected = rows.find((row) => row.key === algorithmSelect.value) || leader;
+  const selectedRank = Math.max(0, rows.findIndex((row) => row.key === selected.key));
+  const gap = Math.max(0, selected.total - leader.total);
+  const gapPct = selected.total ? Math.round((gap / selected.total) * 100) : 0;
+  const runnerUp = rows[1] || leader;
+
+  let summary = `${selected.label} is currently trailing ${leader.label} on this workload.`;
+  let cue = `Open with ${leader.label}, then use ${selected.label} as the contrast pick.`;
+
+  if (selected.key === leader.key) {
+    summary = `${selected.label} is carrying the benchmark load right now.`;
+    cue = `Use ${runnerUp.label} as the contrast so the win looks earned instead of accidental.`;
+  } else if (gap <= Math.max(12, leader.total * 0.12)) {
+    summary = `${selected.label} is close enough to the lead that the choice can be justified by teachability, not just raw ops.`;
+    cue = 'Narrate why the current pick stays defensible even without topping the table.';
+  } else if (selectedRank >= rows.length - 2) {
+    summary = `${selected.label} is under real benchmark pressure and should be framed as a deliberate teaching contrast.`;
+    cue = 'Use the replay to explain the failure mode, then pivot back to the winner table.';
+  }
+
+  benchmarkPressureSummaryEl.textContent = summary;
+  benchmarkPressureLeaderEl.textContent = leader.label;
+  benchmarkPressureCurrentEl.textContent = `${selected.label} (#${selectedRank + 1}/${rows.length})`;
+  benchmarkPressureGapEl.textContent = selected.key === leader.key ? 'Leading' : `+${gap} ops (${gapPct}%)`;
+  benchmarkPressureCueEl.textContent = cue;
 }
 
 function compareAlgorithms() {

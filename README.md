@@ -14,6 +14,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Compare-all snapshots can now be exported as CSV for portfolio writeups or repeatable benchmarking notes.
 - Preset gauntlet benchmarks every implemented sorter across randomized, nearly-sorted, reversed, and few-unique workloads in one pass.
 - Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
+- Benchmark pressure board now shows whether the current picker is leading, close enough to defend, or only useful as a contrast demo.
 - Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
 - Selected-algorithm story board turns the current picker into a best-demo angle, watch-out, and history-aware portfolio pitch.
 - Selection track record board reads the current picker against the local winner tape so the pitch can lean on repeatability, not one lucky benchmark.
