@@ -125,6 +125,11 @@ const selectionTrackFinishesEl = document.getElementById('selection-track-finish
 const selectionTrackBestEl = document.getElementById('selection-track-best');
 const selectionTrackMedianEl = document.getElementById('selection-track-median');
 const selectionTrackCueEl = document.getElementById('selection-track-cue');
+const complexityRealitySummaryEl = document.getElementById('complexity-reality-summary');
+const complexityRealityTheoryEl = document.getElementById('complexity-reality-theory');
+const complexityRealityActualEl = document.getElementById('complexity-reality-actual');
+const complexityRealityFitEl = document.getElementById('complexity-reality-fit');
+const complexityRealityCueEl = document.getElementById('complexity-reality-cue');
 const gauntletSummaryEl = document.getElementById('gauntlet-summary');
 const gauntletLeaderEl = document.getElementById('gauntlet-leader');
 const gauntletBaselineEl = document.getElementById('gauntlet-baseline');
@@ -805,6 +810,66 @@ function updateOperationLens() {
   updateVolatilityBoard(summary);
   updateOperationPosture(summary);
   updateTeachingCut(summary);
+  renderComplexityRealityCheck(summary);
+}
+
+function renderComplexityRealityCheck(summary = summarizeOperations(steps)) {
+  if (
+    !complexityRealitySummaryEl ||
+    !complexityRealityTheoryEl ||
+    !complexityRealityActualEl ||
+    !complexityRealityFitEl ||
+    !complexityRealityCueEl
+  ) {
+    return;
+  }
+
+  if (!summary.total) {
+    complexityRealitySummaryEl.textContent = 'Generate a run to compare theory with observed operation cost.';
+    complexityRealityTheoryEl.textContent = '-';
+    complexityRealityActualEl.textContent = '-';
+    complexityRealityFitEl.textContent = '-';
+    complexityRealityCueEl.textContent = '-';
+    return;
+  }
+
+  const n = Math.max(1, baseArray.length);
+  const nLogN = Math.max(1, Math.round(n * Math.log2(Math.max(2, n))));
+  const quadratic = Math.max(1, n * n);
+  const linearish = Math.max(1, n * 2);
+  const actual = summary.total;
+  let baseline = nLogN;
+  let theoryLabel = `n log n family (~${nLogN} weighted ops)`;
+
+  if (['bubble', 'insertion'].includes(algorithmSelect.value)) {
+    baseline = quadratic;
+    theoryLabel = `quadratic family (~${quadratic} weighted ops)`;
+  } else if (algorithmSelect.value === 'radix') {
+    baseline = linearish;
+    theoryLabel = `digit-pass family (~${linearish} weighted ops)`;
+  }
+
+  const ratio = actual / Math.max(1, baseline);
+  const fitRead =
+    ratio <= 0.75
+      ? 'Better than the coarse theory baseline on this workload.'
+      : ratio <= 1.35
+        ? 'Roughly aligned with the expected complexity posture.'
+        : 'Heavier than the coarse theory baseline on this workload.';
+  const cue =
+    ['bubble', 'insertion'].includes(algorithmSelect.value)
+      ? ratio <= 0.8
+        ? 'The input is structured enough that the usual quadratic warning softened in practice.'
+        : 'This is a good reminder that simple quadratic sorters stop feeling cute once the array stops cooperating.'
+      : ratio >= 1.35
+        ? 'Use this run to explain that asymptotic families still hide workload-specific overhead, partition churn, or rebuild cost.'
+        : 'The replay is matching the textbook story closely enough that you can teach theory and observed cost together.';
+
+  complexityRealitySummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} generated ${actual} replay steps against a coarse ${theoryLabel} baseline.`;
+  complexityRealityTheoryEl.textContent = theoryLabel;
+  complexityRealityActualEl.textContent = `${actual} queued ops | comparisons ${summary.comparisons} | swaps ${summary.swaps} | writes ${summary.writes}`;
+  complexityRealityFitEl.textContent = `${fitRead} Ratio: ${ratio.toFixed(2)}x baseline.`;
+  complexityRealityCueEl.textContent = cue;
 }
 
 function updateVolatilityBoard(summary = summarizeOperations(steps)) {
