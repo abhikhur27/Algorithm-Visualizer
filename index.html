@@ -426,6 +426,34 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
+            <h2>Momentum Window</h2>
+            <p>Split the replay into opening, middle, and closing windows so the teaching beat changes are visible before you scrub through the whole run.</p>
+          </div>
+          <p id="momentum-window-summary" class="comparison-summary">Generate a run to inspect where the replay actually spends its effort.</p>
+        </div>
+        <div class="diagnostics-grid">
+          <article>
+            <h3>Opening Window</h3>
+            <p id="momentum-window-opening">-</p>
+          </article>
+          <article>
+            <h3>Middle Window</h3>
+            <p id="momentum-window-middle">-</p>
+          </article>
+          <article>
+            <h3>Closing Window</h3>
+            <p id="momentum-window-closing">-</p>
+          </article>
+          <article>
+            <h3>Demo Cue</h3>
+            <p id="momentum-window-cue">-</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="diagnostics-panel" aria-live="polite">
+        <div class="comparison-head">
+          <div>
             <h2>Benchmark Verdict</h2>
             <p>Turn the compare-all snapshot into an explicit recommendation.</p>
           </div>

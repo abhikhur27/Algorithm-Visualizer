@@ -81,6 +81,11 @@ const operationPostureDominantEl = document.getElementById('operation-posture-do
 const operationPostureRhythmEl = document.getElementById('operation-posture-rhythm');
 const operationPostureAngleEl = document.getElementById('operation-posture-angle');
 const operationPostureWatchEl = document.getElementById('operation-posture-watch');
+const momentumWindowSummaryEl = document.getElementById('momentum-window-summary');
+const momentumWindowOpeningEl = document.getElementById('momentum-window-opening');
+const momentumWindowMiddleEl = document.getElementById('momentum-window-middle');
+const momentumWindowClosingEl = document.getElementById('momentum-window-closing');
+const momentumWindowCueEl = document.getElementById('momentum-window-cue');
 const teachingCutSummaryEl = document.getElementById('teaching-cut-summary');
 const teachingCutListEl = document.getElementById('teaching-cut-list');
 const benchmarkVerdictEl = document.getElementById('benchmark-verdict');
@@ -809,8 +814,73 @@ function updateOperationLens() {
   updateReplayBudget(summary);
   updateVolatilityBoard(summary);
   updateOperationPosture(summary);
+  updateMomentumWindow(summary);
   updateTeachingCut(summary);
   renderComplexityRealityCheck(summary);
+}
+
+function describeMomentumSlice(slice, label) {
+  if (!slice.length) {
+    return `${label}: no visible operations yet.`;
+  }
+
+  const counts = slice.reduce((accumulator, step) => {
+    accumulator[step.type] = (accumulator[step.type] || 0) + 1;
+    return accumulator;
+  }, {});
+  const entries = Object.entries(counts).sort((left, right) => right[1] - left[1]);
+  const [dominantType, dominantCount] = entries[0];
+  const share = Math.round((dominantCount / slice.length) * 100);
+  const posture = dominantType === 'compare'
+    ? 'scan-heavy'
+    : dominantType === 'swap'
+      ? 'exchange-heavy'
+      : 'rewrite-heavy';
+  return `${label}: ${posture} with ${share}% ${dominantType} steps across ${slice.length} ops.`;
+}
+
+function updateMomentumWindow(summary = summarizeOperations(steps)) {
+  if (
+    !momentumWindowSummaryEl ||
+    !momentumWindowOpeningEl ||
+    !momentumWindowMiddleEl ||
+    !momentumWindowClosingEl ||
+    !momentumWindowCueEl
+  ) {
+    return;
+  }
+
+  if (!summary.total) {
+    momentumWindowSummaryEl.textContent = 'Generate a run to inspect where the replay actually spends its effort.';
+    momentumWindowOpeningEl.textContent = '-';
+    momentumWindowMiddleEl.textContent = '-';
+    momentumWindowClosingEl.textContent = '-';
+    momentumWindowCueEl.textContent = '-';
+    return;
+  }
+
+  const sliceSize = Math.max(1, Math.ceil(steps.length / 3));
+  const opening = steps.slice(0, sliceSize);
+  const middle = steps.slice(sliceSize, sliceSize * 2);
+  const closing = steps.slice(sliceSize * 2);
+  const windows = [
+    { label: 'Opening', steps: opening },
+    { label: 'Middle', steps: middle },
+    { label: 'Closing', steps: closing },
+  ];
+  const densestWindow = windows.reduce((best, current) => {
+    if (!best || current.steps.length > best.steps.length) return current;
+    return best;
+  }, null);
+  const pacingCue = summary.comparisons >= summary.swaps && summary.comparisons >= summary.writes
+    ? `Narrate the ${densestWindow.label.toLowerCase()} scan pressure first, then jump to the few decisive commits.`
+    : `Scrub quickly through the ${densestWindow.label.toLowerCase()} window because that is where the replay's visible work actually lands.`;
+
+  momentumWindowSummaryEl.textContent = `The replay spreads ${summary.total} operations across three windows so you can tell whether the algorithm spends its story budget early, midstream, or only at the finish.`;
+  momentumWindowOpeningEl.textContent = describeMomentumSlice(opening, 'Opening');
+  momentumWindowMiddleEl.textContent = describeMomentumSlice(middle, 'Middle');
+  momentumWindowClosingEl.textContent = describeMomentumSlice(closing, 'Closing');
+  momentumWindowCueEl.textContent = pacingCue;
 }
 
 function renderComplexityRealityCheck(summary = summarizeOperations(steps)) {
