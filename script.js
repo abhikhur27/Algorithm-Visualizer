@@ -9,6 +9,7 @@ const compareBtn = document.getElementById('compare-btn');
 const shareArrayBtn = document.getElementById('share-array-btn');
 const exportArrayBtn = document.getElementById('export-array-btn');
 const exportCompareBtn = document.getElementById('export-compare-btn');
+const exportCompareTapeBtn = document.getElementById('export-compare-tape-btn');
 const copyBriefBtn = document.getElementById('copy-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
@@ -1939,6 +1940,30 @@ function exportComparisonCsv() {
   setStatus('Exported compare-all snapshot as CSV.');
 }
 
+function exportComparisonTape() {
+  if (!comparisonHistory.length && !lastComparisonRows.length) {
+    setStatus('Run Compare All or save a workload before exporting the compare tape.');
+    return;
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    algorithm: algorithmSelect.value,
+    array: baseArray,
+    latestComparison: lastComparisonRows,
+    comparisonHistory,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'algorithm-visualizer-compare-tape.json';
+  link.click();
+  URL.revokeObjectURL(url);
+  setStatus('Exported compare tape with the latest benchmark snapshot and saved history.');
+}
+
 function buildBenchmarkBrief() {
   const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Selected algorithm';
   const lines = [
@@ -2167,6 +2192,7 @@ gauntletBtn?.addEventListener('click', runPresetGauntlet);
 saveWorkloadBtn?.addEventListener('click', saveCurrentWorkload);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
+exportCompareTapeBtn?.addEventListener('click', exportComparisonTape);
 copyBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildBenchmarkBrief());
