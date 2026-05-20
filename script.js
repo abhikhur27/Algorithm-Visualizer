@@ -352,7 +352,6 @@ function renderSavedWorkloads() {
           <p><strong>Forecast:</strong> ${entry.recommendedAlgorithmLabel || 'Quick Sort'}</p>
           <div class="card-actions">
             <button class="load-workload-btn" type="button" data-index="${index}">Load</button>
-            <button class="load-forecast-btn" type="button" data-index="${index}">Load + Forecast</button>
             <button class="delete-workload-btn" type="button" data-index="${index}">Delete</button>
           </div>
         </article>
@@ -369,22 +368,6 @@ function renderSavedWorkloads() {
       sizeSlider.value = String(entry.array.length);
       sizeValue.textContent = String(entry.array.length);
       setBaseArray(entry.array, `Loaded saved workload: ${entry.label}.`);
-    });
-  });
-
-  savedWorkloadsBody.querySelectorAll('.load-forecast-btn').forEach((button) => {
-    button.addEventListener('click', () => {
-      const index = Number(button.dataset.index);
-      const entry = savedWorkloads[index];
-      if (!entry) return;
-      customArrayInput.value = entry.array.join(', ');
-      sizeSlider.value = String(entry.array.length);
-      sizeValue.textContent = String(entry.array.length);
-      if (entry.recommendedAlgorithmKey && algorithmGenerators[entry.recommendedAlgorithmKey]) {
-        algorithmSelect.value = entry.recommendedAlgorithmKey;
-        updateNote();
-      }
-      setBaseArray(entry.array, `Loaded saved workload with forecasted best fit: ${entry.recommendedAlgorithmLabel || 'Quick Sort'}.`);
     });
   });
 
@@ -2188,7 +2171,6 @@ scrubberJumpButtons.forEach((button) => {
 
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
-gauntletBtn?.addEventListener('click', runPresetGauntlet);
 saveWorkloadBtn?.addEventListener('click', saveCurrentWorkload);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
@@ -2337,8 +2319,4 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
-  if (event.key.toLowerCase() === 'g') {
-    event.preventDefault();
-    runPresetGauntlet();
-  }
 });

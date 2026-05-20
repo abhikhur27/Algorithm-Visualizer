@@ -5,32 +5,15 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 ## Features
 
 - Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
-- Playback controls: start, pause, step, reset, randomize.
+- Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
-- Import/export arrays as JSON, CSV, or plain text for reproducible benchmarks.
+- Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
 - One-click comparison snapshot across all implemented sorting algorithms.
-- Copy Benchmark Brief turns the current workload, selected run stats, and compare-all ranking into a clipboard-ready summary.
-- Compare-all snapshots can now be exported as CSV for portfolio writeups or repeatable benchmarking notes.
-- Preset gauntlet benchmarks every implemented sorter across randomized, nearly-sorted, reversed, and few-unique workloads in one pass.
-- Benchmark verdict now calls out the runner-up and how far the currently selected algorithm trails or leads the winner.
-- Benchmark pressure board now shows whether the current picker is leading, close enough to defend, or only useful as a contrast demo.
-- Stability read tracks whether recent compare-all winners are repeating or changing across workloads.
-- Selected-algorithm story board turns the current picker into a best-demo angle, watch-out, and history-aware portfolio pitch.
-- Selection track record board reads the current picker against the local winner tape so the pitch can lean on repeatability, not one lucky benchmark.
-- Complexity reality check compares textbook complexity posture against the actual replayable operation load for the chosen workload.
-- Workload diagnostics for sortedness, duplicate rate, value spread, and inversion pressure.
-- Array fingerprint panel for monotonic runs, adjacent jump severity, median, and uniqueness density.
-- Workload matchup panel forecasts the best-fit sorter, safest baseline, and riskiest pick before compare-all benchmarks.
-- Experiment coach recommends the next preset contrast that makes the selected algorithm's tradeoff easiest to explain in a demo.
-- Selection verdict board turns the current sorter into a pitch with a best use, fallback, and watch-out.
-- Run volatility board detects whether the replay is smooth, scan-heavy, or back-loaded before you present it live.
 - Operation counters:
   - Comparisons
   - Swaps
   - Writes
-- Replay teaching cut that picks five narration checkpoints from the generated operation stream.
-- Operation posture board that classifies each replay as scout-heavy, exchange-heavy, or rebuild-heavy before a live walkthrough.
 - Responsive bar visualization with color-coded state legend.
 
 ## Technical Design
@@ -65,8 +48,7 @@ Open `http://localhost:8000`.
 1. Load the `Reversed` preset.
 2. Run `Compare All` to create a benchmark verdict.
 3. Scrub through Quick Sort or Merge Sort to show replayable operations.
-4. Use `Copy Benchmark Brief` for a repeatable writeup artifact.
-5. Follow the Experiment Coach to stage one strong-fit run and one contrast run for the same algorithm.
+4. Contrast with Bubble Sort to make performance tradeoffs obvious.
 
 ## GitHub Pages Compatibility
 
