@@ -440,3 +440,14 @@ td {
     transition: none !important;
   }
 }
+
+/* Portfolio minimal mode: keep the core sorter workflow visible and hide narrative dashboard bloat. */
+.visual-panel .diagnostics-panel {
+  display: none;
+}
+
+.comparison-panel .comparison-history-head,
+.comparison-panel .comparison-history-list,
+.comparison-panel .diagnostics-panel {
+  display: none;
+}
