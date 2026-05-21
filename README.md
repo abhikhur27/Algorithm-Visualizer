@@ -7,6 +7,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 - Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
 - Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
 - Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
+- Shortcut support now includes `P` for best-fit auto-pick before a compare-all pass.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.

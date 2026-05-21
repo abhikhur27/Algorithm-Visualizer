@@ -2350,6 +2350,12 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (event.key.toLowerCase() === 'p') {
+    event.preventDefault();
+    pickBestFitAlgorithm(computeArrayInsights(baseArray));
+    return;
+  }
+
   if (event.key.toLowerCase() === 'c') {
     event.preventDefault();
     compareAlgorithms();
