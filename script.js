@@ -17,6 +17,7 @@ const gauntletBtn = document.getElementById('gauntlet-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
 const randomizeBtn = document.getElementById('randomize-btn');
+const pickBestFitBtn = document.getElementById('pick-best-fit-btn');
 const saveWorkloadBtn = document.getElementById('save-workload-btn');
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
@@ -674,6 +675,41 @@ function updateWorkloadMatchup(metrics) {
   matchupBaselineEl.textContent = baseline;
   matchupRiskEl.textContent = risk;
   matchupSelectedEl.textContent = selectedRead;
+}
+
+function pickBestFitAlgorithm(metrics = computeArrayInsights(baseArray)) {
+  if (!baseArray.length) {
+    setStatus('Generate or apply an array before auto-picking a sorter.');
+    return;
+  }
+
+  let nextAlgorithm = 'quick';
+  let reason = 'general-purpose disorder with no strong structural bias.';
+
+  if ((metrics.sortedness ?? 0) >= 82) {
+    nextAlgorithm = 'insertion';
+    reason = 'the array is already close to sorted.';
+  } else if ((metrics.duplicateRate ?? 0) >= 35) {
+    nextAlgorithm = 'merge';
+    reason = 'duplicate-heavy inputs reward a stable baseline.';
+  } else if ((metrics.inversionRatio ?? 0) >= 0.72) {
+    nextAlgorithm = 'heap';
+    reason = 'disorder is high enough that a worst-case-safe n log n baseline is the cleanest teaching pick.';
+  } else if ((metrics.duplicateRate ?? 0) >= 20 && (metrics.spread ?? Number.POSITIVE_INFINITY) <= 24) {
+    nextAlgorithm = 'radix';
+    reason = 'bounded repeated integers make digit passes plausible.';
+  } else if ((metrics.sortedness ?? 0) >= 68) {
+    nextAlgorithm = 'shell';
+    reason = 'the input is partially ordered but not insertion-friendly enough for the first pick.';
+  }
+
+  algorithmSelect.value = nextAlgorithm;
+  updateAlgorithmProfile(metrics);
+  updateSelectionVerdict(metrics);
+  updateWorkloadMatchup(metrics);
+  syncUrlState();
+  persistState();
+  setStatus(`Auto-picked ${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || nextAlgorithm} because ${reason}`);
 }
 
 function estimateTheoryOps() {
@@ -2171,6 +2207,7 @@ scrubberJumpButtons.forEach((button) => {
 
 resetBtn.addEventListener('click', resetToBase);
 compareBtn?.addEventListener('click', compareAlgorithms);
+pickBestFitBtn?.addEventListener('click', () => pickBestFitAlgorithm(computeArrayInsights(baseArray)));
 saveWorkloadBtn?.addEventListener('click', saveCurrentWorkload);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);

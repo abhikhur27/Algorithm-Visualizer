@@ -6,6 +6,7 @@ Professional sorting visualizer for studying algorithm behavior step-by-step.
 
 - Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
 - Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
+- Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
@@ -55,6 +56,12 @@ Open `http://localhost:8000`.
 - Pure static assets.
 - No build pipeline required.
 - Deploy from repository root.
+
+## Portfolio Positioning
+
+- Honest label: browser-based sorting visualizer, not native systems software.
+- Strongest portfolio use: replayable algorithm explanation and workload comparison.
+- Current quality bar: keep the control surface teachable and avoid turning the page into a diagnostics wall.
 
 ## Future Improvements
 
