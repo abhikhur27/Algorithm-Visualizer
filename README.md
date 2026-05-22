@@ -45,6 +45,11 @@ python -m http.server 8000
 
 Open `http://localhost:8000`.
 
+## Reproducible Workloads
+
+- The app preserves its active workload in the URL, so shared links can reopen the same sorter, sliders, and array state.
+- Use the built-in share/export controls when you want a benchmark discussion to stay tied to one exact input shape instead of a fresh random run.
+
 ## Portfolio Demo Path
 
 1. Load the `Reversed` preset.
