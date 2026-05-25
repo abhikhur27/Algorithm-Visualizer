@@ -48,6 +48,7 @@ Open `http://localhost:8000`.
 ## Reproducible Workloads
 
 - The app preserves its active workload in the URL, so shared links can reopen the same sorter, sliders, and array state.
+- The UI now exposes the whole workload utility shelf directly: share link, save workload, import/export, compare CSV, compare tape, and gauntlet runs.
 - Use the built-in share/export controls when you want a benchmark discussion to stay tied to one exact input shape instead of a fresh random run.
 
 ## Portfolio Demo Path
