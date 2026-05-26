@@ -74,3 +74,12 @@ Open `http://localhost:8000`.
 
 - Add side-by-side visual diffing between two selected sorters on the same workload.
 - Add comparison history across multiple imported workloads.
+
+## Sanity Benchmark Script
+
+For consistent portfolio claims, use this benchmark script before sharing results:
+
+1. Run `Nearly Sorted` at 80 bars and capture `Compare All`.
+2. Run `Few Unique` at 80 bars and capture `Compare All`.
+3. Run `Reversed` at 120 bars and capture `Compare All`.
+4. Report the best/worst algorithm by workload type rather than one global winner.
