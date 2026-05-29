@@ -1206,7 +1206,7 @@ function parseCustomArray() {
   if (!raw) return null;
 
   const values = raw
-    .split(',')
+    .split(/[\s,;]+/)
     .map((token) => Number.parseInt(token.trim(), 10))
     .filter((value) => Number.isInteger(value));
 
@@ -2054,7 +2054,7 @@ function regenerateArray() {
 function applyCustomArray() {
   const parsed = parseCustomArray();
   if (!parsed) {
-    setStatus('Provide 5-120 comma-separated integers (example: 9, 45, 12, 80).');
+    setStatus('Provide 5-120 integers separated by commas, spaces, or new lines.');
     return;
   }
 
