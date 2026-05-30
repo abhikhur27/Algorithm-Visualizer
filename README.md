@@ -84,3 +84,9 @@ For consistent portfolio claims, use this benchmark script before sharing result
 2. Run `Few Unique` at 80 bars and capture `Compare All`.
 3. Run `Reversed` at 120 bars and capture `Compare All`.
 4. Report the best/worst algorithm by workload type rather than one global winner.
+
+## Quick Verification Command
+
+Run this syntax check before sharing updates:
+- node --check script.js
+
