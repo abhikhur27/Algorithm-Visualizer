@@ -2362,4 +2362,10 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (event.key.toLowerCase() === 'g') {
+    event.preventDefault();
+    runPresetGauntlet();
+    return;
+  }
+
 });
