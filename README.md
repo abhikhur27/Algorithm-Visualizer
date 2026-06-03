@@ -38,6 +38,13 @@ flowchart TD
 
 Instead of sorting directly in the DOM, each algorithm produces a list of deterministic operations (`compare`, `swap`, `overwrite`). That makes the UI easier to test, pause/resume, and step through.
 
+## Demo workflow
+
+1. Generate or import an array.
+2. Use `Auto Pick` when you want the app to choose the most defensible first algorithm for that workload.
+3. Run `Compare All` to benchmark the same input across the full implemented set.
+4. Export the comparison CSV or copy the benchmark brief when you need a reusable walkthrough artifact.
+
 ## Local Run
 
 ```bash
