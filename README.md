@@ -38,6 +38,17 @@ flowchart TD
 
 Instead of sorting directly in the DOM, each algorithm produces a list of deterministic operations (`compare`, `swap`, `overwrite`). That makes the UI easier to test, pause/resume, and step through.
 
+## Demo Flow
+
+1. Load a patterned workload.
+2. Use `Best Fit` before a full compare-all pass.
+3. Export the comparison CSV when the theory-vs-runtime tradeoff becomes visible.
+
+## Honest Label
+
+- Project type: browser sorting visualizer
+- Stack truth: HTML, CSS, JavaScript
+
 ## Demo workflow
 
 1. Generate or import an array.
