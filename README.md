@@ -1,6 +1,6 @@
-# Algorithm Visualizer Lab
+# Algorithm Visualizer
 
-Professional sorting visualizer for studying algorithm behavior step-by-step.
+Browser sorting visualizer for studying algorithm behavior step-by-step.
 
 ## Features
 
