@@ -2368,4 +2368,9 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (event.key.toLowerCase() === 's') {
+    event.preventDefault();
+    saveCurrentWorkload();
+  }
+
 });
