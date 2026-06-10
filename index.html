@@ -520,7 +520,18 @@
             <h2>Comparison Snapshot</h2>
             <p>Run the current array through every implemented sorter without animation.</p>
           </div>
-          <p id="comparison-summary" class="comparison-summary">No comparison yet.</p>
+          <div class="comparison-summary-block">
+            <label class="metric-select" for="benchmark-metric">
+              Rank by
+              <select id="benchmark-metric">
+                <option value="total">Total Ops</option>
+                <option value="comparisons">Comparisons</option>
+                <option value="writes">Writes</option>
+                <option value="swaps">Swaps</option>
+              </select>
+            </label>
+            <p id="comparison-summary" class="comparison-summary">No comparison yet.</p>
+          </div>
         </div>
         <div class="table-wrap">
           <table>

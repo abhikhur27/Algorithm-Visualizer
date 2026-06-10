@@ -102,6 +102,7 @@ const benchmarkPressureLeaderEl = document.getElementById('benchmark-pressure-le
 const benchmarkPressureCurrentEl = document.getElementById('benchmark-pressure-current');
 const benchmarkPressureGapEl = document.getElementById('benchmark-pressure-gap');
 const benchmarkPressureCueEl = document.getElementById('benchmark-pressure-cue');
+const benchmarkMetricSelect = document.getElementById('benchmark-metric');
 const comparisonBody = document.getElementById('comparison-body');
 const comparisonSummary = document.getElementById('comparison-summary');
 const savedWorkloadsSummary = document.getElementById('saved-workloads-summary');
@@ -174,6 +175,13 @@ const algorithmProfiles = {
   radix: { time: 'O(d * n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Bounded non-negative integers with many repeated digits.' },
 };
 
+const comparisonMetricLabels = {
+  total: 'total operations',
+  comparisons: 'comparisons',
+  writes: 'writes',
+  swaps: 'swaps',
+};
+
 let baseArray = [];
 let currentArray = [];
 let steps = [];
@@ -200,6 +208,7 @@ function loadPersistedState() {
 function persistState() {
   const payload = {
     algorithm: algorithmSelect.value,
+    benchmarkMetric: benchmarkMetricSelect?.value || 'total',
     size: sizeSlider.value,
     speed: speedSlider.value,
     customArray: customArrayInput.value,
@@ -214,6 +223,7 @@ function persistState() {
 function syncUrlState() {
   const params = new URLSearchParams(window.location.search);
   params.set('algorithm', algorithmSelect.value);
+  params.set('metric', benchmarkMetricSelect?.value || 'total');
   params.set('size', sizeSlider.value);
   params.set('speed', speedSlider.value);
 
@@ -237,6 +247,11 @@ function syncUrlState() {
 function hydrateFromUrlState() {
   const params = new URLSearchParams(window.location.search);
   if (![...params.keys()].length) return null;
+
+  const metric = params.get('metric');
+  if (metric && benchmarkMetricSelect?.querySelector(`option[value="${metric}"]`)) {
+    benchmarkMetricSelect.value = metric;
+  }
 
   const algorithm = params.get('algorithm');
   if (algorithm && algorithmGenerators[algorithm]) {
@@ -264,6 +279,22 @@ function hydrateFromUrlState() {
   }
 
   return null;
+}
+
+function getSelectedComparisonMetric() {
+  const metric = benchmarkMetricSelect?.value || 'total';
+  return Object.prototype.hasOwnProperty.call(comparisonMetricLabels, metric) ? metric : 'total';
+}
+
+function getMetricValue(row, metric = getSelectedComparisonMetric()) {
+  return Number(row?.[metric] || 0);
+}
+
+function rankComparisonRows(rows = lastComparisonRows) {
+  const metric = getSelectedComparisonMetric();
+  return rows
+    .map((row) => ({ ...row }))
+    .sort((a, b) => getMetricValue(a, metric) - getMetricValue(b, metric) || a.total - b.total || a.comparisons - b.comparisons);
 }
 
 function randomArray(size) {
@@ -1488,7 +1519,8 @@ function summarizeOperations(stepList) {
 function renderComparisonRows(rows) {
   if (!comparisonBody) return;
 
-  comparisonBody.innerHTML = rows
+  const rankedRows = rankComparisonRows(rows);
+  comparisonBody.innerHTML = rankedRows
     .map(
       (row) => `
         <tr>
@@ -1798,8 +1830,9 @@ function runPresetGauntlet() {
 
 function updateBenchmarkVerdict(rows = []) {
   if (!benchmarkVerdictEl || !benchmarkFastestEl || !benchmarkGapEl || !benchmarkStableEl || !benchmarkCoachEl) return;
+  const rankedRows = rankComparisonRows(rows);
 
-  if (!rows.length) {
+  if (!rankedRows.length) {
     benchmarkVerdictEl.textContent = 'Run Compare All to see which sorter best fits this workload.';
     benchmarkFastestEl.textContent = '-';
     benchmarkGapEl.textContent = '-';
@@ -1811,51 +1844,58 @@ function updateBenchmarkVerdict(rows = []) {
     return;
   }
 
-  const best = rows[0];
-  const runnerUp = rows[1] || rows[0];
-  const worst = rows[rows.length - 1];
-  const stablePick = rows.find((row) => algorithmProfiles[row.key]?.stability === 'Yes') || best;
+  const metric = getSelectedComparisonMetric();
+  const metricLabel = comparisonMetricLabels[metric];
+  const best = rankedRows[0];
+  const runnerUp = rankedRows[1] || rankedRows[0];
+  const worst = rankedRows[rankedRows.length - 1];
+  const stablePick = rankedRows.find((row) => algorithmProfiles[row.key]?.stability === 'Yes') || best;
   const selectedKey = algorithmSelect.value;
-  const selected = rows.find((row) => row.key === selectedKey) || best;
-  const gap = worst.total - best.total;
-  const gapPct = worst.total ? Math.round((gap / worst.total) * 100) : 0;
-  const selectedGap = selected.total - best.total;
-  const selectedGapPct = selected.total ? Math.round((selectedGap / selected.total) * 100) : 0;
+  const selected = rankedRows.find((row) => row.key === selectedKey) || best;
+  const bestValue = getMetricValue(best, metric);
+  const runnerUpValue = getMetricValue(runnerUp, metric);
+  const worstValue = getMetricValue(worst, metric);
+  const selectedValue = getMetricValue(selected, metric);
+  const gap = worstValue - bestValue;
+  const gapPct = worstValue ? Math.round((gap / worstValue) * 100) : 0;
+  const selectedGap = selectedValue - bestValue;
+  const selectedGapPct = selectedValue ? Math.round((selectedGap / selectedValue) * 100) : 0;
 
-  benchmarkVerdictEl.textContent = `${best.label} leads this workload by ${gap} operations over ${worst.label}.`;
+  benchmarkVerdictEl.textContent = `${best.label} leads this workload by ${gap} ${metricLabel} over ${worst.label}.`;
   benchmarkFastestEl.textContent = best.label;
-  benchmarkGapEl.textContent = `${gap} ops (${gapPct}%)`;
+  benchmarkGapEl.textContent = `${gap} ${metricLabel} (${gapPct}%)`;
   benchmarkStableEl.textContent = stablePick.label;
   if (benchmarkRunnerUpEl) {
     benchmarkRunnerUpEl.textContent =
-      runnerUp.key === best.key ? `${best.label} (clear lead)` : `${runnerUp.label} (+${runnerUp.total - best.total} ops)`;
+      runnerUp.key === best.key ? `${best.label} (clear lead)` : `${runnerUp.label} (+${runnerUpValue - bestValue} ${metricLabel})`;
   }
   if (benchmarkSelectedGapEl) {
     benchmarkSelectedGapEl.textContent =
-      selected.key === best.key ? 'Currently best fit' : `+${selectedGap} ops (${selectedGapPct}%)`;
+      selected.key === best.key ? `Currently best on ${metricLabel}` : `+${selectedGap} ${metricLabel} (${selectedGapPct}%)`;
   }
 
   if (best.key === stablePick.key) {
     benchmarkCoachEl.textContent = 'The leading algorithm is also stable, so duplicate-heavy data should stay readable.';
   } else if (selected.key === best.key) {
     benchmarkCoachEl.textContent = `${selected.label} already leads this workload, so the current pick is aligned with the input shape.`;
-  } else if (selectedGap <= Math.max(12, best.total * 0.12)) {
+  } else if (selectedGap <= Math.max(12, bestValue * 0.12)) {
     benchmarkCoachEl.textContent = `${selected.label} is close to the winner, so the current pick is still defensible if its behavior is easier to teach.`;
-  } else if (stablePick.total - best.total <= Math.max(12, best.total * 0.15)) {
+  } else if (getMetricValue(stablePick, metric) - bestValue <= Math.max(12, bestValue * 0.15)) {
     benchmarkCoachEl.textContent = `${stablePick.label} is close behind and may be the better teaching baseline when stability matters.`;
   } else {
     benchmarkCoachEl.textContent = `${best.label} is the clear efficiency winner, while ${stablePick.label} remains the safer stable reference point.`;
   }
 
-  renderBenchmarkPressure(rows);
+  renderBenchmarkPressure(rankedRows);
 }
 
 function renderBenchmarkPressure(rows = lastComparisonRows) {
   if (!benchmarkPressureSummaryEl || !benchmarkPressureLeaderEl || !benchmarkPressureCurrentEl || !benchmarkPressureGapEl || !benchmarkPressureCueEl) {
     return;
   }
+  const rankedRows = rankComparisonRows(rows);
 
-  if (!rows.length) {
+  if (!rankedRows.length) {
     benchmarkPressureSummaryEl.textContent = 'Run Compare All to measure how much pressure is on the current algorithm pick.';
     benchmarkPressureLeaderEl.textContent = '-';
     benchmarkPressureCurrentEl.textContent = '-';
@@ -1864,12 +1904,14 @@ function renderBenchmarkPressure(rows = lastComparisonRows) {
     return;
   }
 
-  const leader = rows[0];
-  const selected = rows.find((row) => row.key === algorithmSelect.value) || leader;
-  const selectedRank = Math.max(0, rows.findIndex((row) => row.key === selected.key));
-  const gap = Math.max(0, selected.total - leader.total);
-  const gapPct = selected.total ? Math.round((gap / selected.total) * 100) : 0;
-  const runnerUp = rows[1] || leader;
+  const metric = getSelectedComparisonMetric();
+  const metricLabel = comparisonMetricLabels[metric];
+  const leader = rankedRows[0];
+  const selected = rankedRows.find((row) => row.key === algorithmSelect.value) || leader;
+  const selectedRank = Math.max(0, rankedRows.findIndex((row) => row.key === selected.key));
+  const gap = Math.max(0, getMetricValue(selected, metric) - getMetricValue(leader, metric));
+  const gapPct = getMetricValue(selected, metric) ? Math.round((gap / getMetricValue(selected, metric)) * 100) : 0;
+  const runnerUp = rankedRows[1] || leader;
 
   let summary = `${selected.label} is currently trailing ${leader.label} on this workload.`;
   let cue = `Open with ${leader.label}, then use ${selected.label} as the contrast pick.`;
@@ -1877,18 +1919,18 @@ function renderBenchmarkPressure(rows = lastComparisonRows) {
   if (selected.key === leader.key) {
     summary = `${selected.label} is carrying the benchmark load right now.`;
     cue = `Use ${runnerUp.label} as the contrast so the win looks earned instead of accidental.`;
-  } else if (gap <= Math.max(12, leader.total * 0.12)) {
+  } else if (gap <= Math.max(12, getMetricValue(leader, metric) * 0.12)) {
     summary = `${selected.label} is close enough to the lead that the choice can be justified by teachability, not just raw ops.`;
     cue = 'Narrate why the current pick stays defensible even without topping the table.';
-  } else if (selectedRank >= rows.length - 2) {
+  } else if (selectedRank >= rankedRows.length - 2) {
     summary = `${selected.label} is under real benchmark pressure and should be framed as a deliberate teaching contrast.`;
     cue = 'Use the replay to explain the failure mode, then pivot back to the winner table.';
   }
 
   benchmarkPressureSummaryEl.textContent = summary;
   benchmarkPressureLeaderEl.textContent = leader.label;
-  benchmarkPressureCurrentEl.textContent = `${selected.label} (#${selectedRank + 1}/${rows.length})`;
-  benchmarkPressureGapEl.textContent = selected.key === leader.key ? 'Leading' : `+${gap} ops (${gapPct}%)`;
+  benchmarkPressureCurrentEl.textContent = `${selected.label} (#${selectedRank + 1}/${rankedRows.length})`;
+  benchmarkPressureGapEl.textContent = selected.key === leader.key ? `Leading on ${metricLabel}` : `+${gap} ${metricLabel} (${gapPct}%)`;
   benchmarkPressureCueEl.textContent = cue;
 }
 
@@ -1907,25 +1949,26 @@ function compareAlgorithms() {
     };
   });
 
-  rows.sort((a, b) => a.total - b.total || a.comparisons - b.comparisons);
   lastComparisonRows = rows.map((row) => ({ ...row }));
-  renderComparisonRows(rows);
-  updateBenchmarkVerdict(rows);
+  const rankedRows = rankComparisonRows(lastComparisonRows);
+  renderComparisonRows(rankedRows);
+  updateBenchmarkVerdict(rankedRows);
 
   if (comparisonSummary) {
-    const best = rows[0];
-    const worst = rows[rows.length - 1];
-    comparisonSummary.textContent = `${best.label} is lightest on this input; ${worst.label} does the most work.`;
+    const metricLabel = comparisonMetricLabels[getSelectedComparisonMetric()];
+    const best = rankedRows[0];
+    const worst = rankedRows[rankedRows.length - 1];
+    comparisonSummary.textContent = `${best.label} is lightest on ${metricLabel}; ${worst.label} does the most work.`;
   }
 
-  const best = rows[0];
-  const worst = rows[rows.length - 1];
+  const best = rankedRows[0];
+  const worst = rankedRows[rankedRows.length - 1];
   comparisonHistory = [
     {
       best: best.label,
       arrayLabel: `${baseArray.length}-value workload`,
       arrayPreview: baseArray.slice(0, 10).join(', '),
-      summary: `${best.label} beat ${rows[1]?.label || worst.label} by ${Math.max(0, (rows[1]?.total || best.total) - best.total)} operations while ${worst.label} landed last.`,
+      summary: `${best.label} beat ${rankedRows[1]?.label || worst.label} by ${Math.max(0, getMetricValue(rankedRows[1] || best) - getMetricValue(best))} ${comparisonMetricLabels[getSelectedComparisonMetric()]} while ${worst.label} landed last.`,
     },
     ...comparisonHistory,
   ].slice(0, 5);
@@ -2212,6 +2255,21 @@ saveWorkloadBtn?.addEventListener('click', saveCurrentWorkload);
 exportArrayBtn?.addEventListener('click', exportArray);
 exportCompareBtn?.addEventListener('click', exportComparisonCsv);
 exportCompareTapeBtn?.addEventListener('click', exportComparisonTape);
+benchmarkMetricSelect?.addEventListener('change', () => {
+  syncUrlState();
+  persistState();
+  if (!lastComparisonRows.length) return;
+  const rankedRows = rankComparisonRows(lastComparisonRows);
+  renderComparisonRows(rankedRows);
+  updateBenchmarkVerdict(rankedRows);
+  if (comparisonSummary) {
+    const metricLabel = comparisonMetricLabels[getSelectedComparisonMetric()];
+    const best = rankedRows[0];
+    const worst = rankedRows[rankedRows.length - 1];
+    comparisonSummary.textContent = `${best.label} is lightest on ${metricLabel}; ${worst.label} does the most work.`;
+  }
+  setStatus(`Comparison snapshot re-ranked by ${comparisonMetricLabels[getSelectedComparisonMetric()]}.`);
+});
 copyBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildBenchmarkBrief());
@@ -2268,6 +2326,9 @@ algorithmSelect.addEventListener('change', () => {
 const persistedState = loadPersistedState();
 if (persistedState) {
   if (persistedState.algorithm) algorithmSelect.value = persistedState.algorithm;
+  if (persistedState.benchmarkMetric && benchmarkMetricSelect?.querySelector(`option[value="${persistedState.benchmarkMetric}"]`)) {
+    benchmarkMetricSelect.value = persistedState.benchmarkMetric;
+  }
   if (persistedState.size) sizeSlider.value = String(persistedState.size);
   if (persistedState.speed) speedSlider.value = String(persistedState.speed);
   if (typeof persistedState.customArray === 'string') customArrayInput.value = persistedState.customArray;

@@ -326,6 +326,16 @@ button:disabled {
   max-width: 26ch;
 }
 
+.comparison-summary-block {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: end;
+}
+
+.metric-select {
+  width: min(220px, 100%);
+}
+
 .comparison-history-head {
   margin-top: 1rem;
 }
@@ -423,6 +433,11 @@ td {
 
   .comparison-head {
     flex-direction: column;
+  }
+
+  .comparison-summary-block {
+    width: 100%;
+    justify-items: stretch;
   }
 
   .comparison-summary {

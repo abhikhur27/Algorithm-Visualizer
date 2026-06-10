@@ -13,6 +13,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
 - One-click comparison snapshot across all implemented sorting algorithms.
+- Comparison snapshot can now be re-ranked by total work, comparisons, writes, or swaps without rerunning the workload.
 - Operation counters:
   - Comparisons
   - Swaps
