@@ -311,6 +311,24 @@ function patternedArray(size, mode) {
     return Array.from({ length: size }, () => buckets[Math.floor(Math.random() * buckets.length)]);
   }
 
+  if (mode === 'organ') {
+    const midpoint = (size - 1) / 2;
+    return Array.from({ length: size }, (_, index) => {
+      const distance = Math.abs(index - midpoint);
+      const normalized = 1 - distance / Math.max(1, midpoint || 1);
+      return Math.max(4, Math.round((normalized * 88) + 8));
+    });
+  }
+
+  if (mode === 'saw') {
+    const cycle = 6;
+    return Array.from({ length: size }, (_, index) => {
+      const phase = index % cycle;
+      const normalized = phase / Math.max(1, cycle - 1);
+      return Math.max(4, Math.round((normalized * 82) + 12));
+    });
+  }
+
   const sorted = Array.from({ length: size }, (_, index) => Math.max(4, Math.round(((index + 1) / size) * 96)));
   const swaps = Math.max(1, Math.floor(size * 0.14));
 
@@ -1780,6 +1798,8 @@ function runPresetGauntlet() {
     { label: 'Nearly Sorted', values: patternedArray(size, 'nearly') },
     { label: 'Reversed', values: patternedArray(size, 'reversed') },
     { label: 'Few Unique', values: patternedArray(size, 'few') },
+    { label: 'Organ Pipe', values: patternedArray(size, 'organ') },
+    { label: 'Sawtooth', values: patternedArray(size, 'saw') },
   ];
 
   const results = workloads.map((workload) => {
@@ -2115,6 +2135,8 @@ function applyShapePreset(mode) {
     nearly: 'Nearly sorted',
     reversed: 'Reversed',
     few: 'Few-unique',
+    organ: 'Organ-pipe',
+    saw: 'Sawtooth',
   };
   setBaseArray(next, `${labelMap[mode] || 'Preset'} array generated (${size} values).`);
 }

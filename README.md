@@ -5,6 +5,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 ## Features
 
 - Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
+- Input-shape presets now include organ-pipe and sawtooth arrays for less textbook-looking workload contrasts.
 - Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
 - Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
 - Shortcut support now includes `P` for best-fit auto-pick before a compare-all pass.
@@ -101,8 +102,9 @@ For consistent portfolio claims, use this benchmark script before sharing result
 
 1. Run `Nearly Sorted` at 80 bars and capture `Compare All`.
 2. Run `Few Unique` at 80 bars and capture `Compare All`.
-3. Run `Reversed` at 120 bars and capture `Compare All`.
-4. Report the best/worst algorithm by workload type rather than one global winner.
+3. Run `Organ Pipe` or `Sawtooth` at 80 bars to stress non-random local structure.
+4. Run `Reversed` at 120 bars and capture `Compare All`.
+5. Report the best/worst algorithm by workload type rather than one global winner.
 
 ## Quick Verification Command
 
