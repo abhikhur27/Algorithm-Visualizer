@@ -162,7 +162,7 @@ const algorithmNotes = {
   shell: 'Shell Sort performs gapped insertion passes, making nearly sorted arrays converge much faster than plain insertion sort.',
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
-  radix: 'Radix Sort groups values by digit from least-significant to most-significant place. It shines when keys are bounded non-negative integers.',
+  radix: 'Radix Sort groups values by digit from least-significant to most-significant place. This build offsets signed integers so negative workloads stay sortable too.',
 };
 
 const algorithmProfiles = {
@@ -172,7 +172,7 @@ const algorithmProfiles = {
   shell: { time: 'Gap-dependent, usually sub-quadratic', memory: 'O(1)', stability: 'No', sweetSpot: 'Medium arrays that need an in-place speedup over insertion sort.' },
   heap: { time: 'O(n log n)', memory: 'O(1)', stability: 'No', sweetSpot: 'Disorder-heavy arrays where worst-case guarantees matter.' },
   quick: { time: 'O(n log n) average', memory: 'O(log n) stack', stability: 'No', sweetSpot: 'General-purpose random-looking inputs.' },
-  radix: { time: 'O(d * n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Bounded non-negative integers with many repeated digits.' },
+  radix: { time: 'O(d * n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Bounded integer workloads, including signed values with tight numeric ranges.' },
 };
 
 const comparisonMetricLabels = {
@@ -612,7 +612,7 @@ function updateExperimentCoach(metrics = null) {
     coach.best = 'Few Unique preset';
     coach.contrast = 'Randomize, then switch to Quick Sort or Merge Sort.';
     coach.angle = 'Frame Radix Sort as a data-domain specialist, not a universal replacement.';
-    coach.watch = 'Mention that its advantage depends on bounded non-negative integers in this app.';
+    coach.watch = 'Mention that its advantage depends on bounded integer ranges; this build now handles signed values by offsetting them before digit passes.';
   }
 
   if (duplicateRate >= 35) {
@@ -1485,14 +1485,19 @@ function heapSortSteps(values) {
 function radixSortSteps(values) {
   const arr = [...values];
   const output = [];
-  const maxValue = Math.max(0, ...arr);
+  if (!arr.length) return output;
+
+  const minValue = Math.min(...arr);
+  const offset = minValue < 0 ? Math.abs(minValue) : 0;
+  const shifted = arr.map((value) => value + offset);
+  const maxValue = Math.max(0, ...shifted);
 
   for (let exp = 1; Math.floor(maxValue / exp) > 0; exp *= 10) {
     const buckets = Array.from({ length: 10 }, () => []);
 
     arr.forEach((value, index) => {
       output.push({ type: 'compare', indices: [index, index] });
-      const digit = Math.floor(value / exp) % 10;
+      const digit = Math.floor((value + offset) / exp) % 10;
       buckets[digit].push(value);
     });
 

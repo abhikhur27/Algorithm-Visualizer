@@ -5,6 +5,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 ## Features
 
 - Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
+- Radix Sort now handles signed integer workloads by offsetting negative values before each digit pass.
 - Input-shape presets now include organ-pipe and sawtooth arrays for less textbook-looking workload contrasts.
 - Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
 - Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
