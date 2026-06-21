@@ -148,6 +148,7 @@ const STORAGE_KEY = 'algorithm_visualizer_lab_state_v1';
 const algorithmGenerators = {
   bubble: bubbleSortSteps,
   insertion: insertionSortSteps,
+  counting: countingSortSteps,
   merge: mergeSortSteps,
   shell: shellSortSteps,
   heap: heapSortSteps,
@@ -158,6 +159,7 @@ const algorithmGenerators = {
 const algorithmNotes = {
   bubble: 'Bubble Sort repeatedly pushes larger values to the right. Worst-case complexity: O(n^2).',
   insertion: 'Insertion Sort builds a sorted prefix and inserts each next value at the correct position. Worst-case: O(n^2).',
+  counting: 'Counting Sort counts each integer key in a bounded range, then rebuilds the array in order. This build supports signed integers by offsetting the minimum value.',
   merge: 'Merge Sort recursively splits and merges ranges. Time complexity: O(n log n), extra memory required.',
   shell: 'Shell Sort performs gapped insertion passes, making nearly sorted arrays converge much faster than plain insertion sort.',
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
@@ -168,6 +170,7 @@ const algorithmNotes = {
 const algorithmProfiles = {
   bubble: { time: 'O(n^2)', memory: 'O(1)', stability: 'Yes', sweetSpot: 'Teaching pairwise swaps and very small arrays.' },
   insertion: { time: 'O(n^2) worst, O(n) near-sorted', memory: 'O(1)', stability: 'Yes', sweetSpot: 'Arrays that are already mostly in order.' },
+  counting: { time: 'O(n + k)', memory: 'O(k)', stability: 'Yes', sweetSpot: 'Bounded integer workloads where the numeric range stays modest relative to array size.' },
   merge: { time: 'O(n log n)', memory: 'O(n)', stability: 'Yes', sweetSpot: 'Consistent benchmarking when duplicates matter.' },
   shell: { time: 'Gap-dependent, usually sub-quadratic', memory: 'O(1)', stability: 'No', sweetSpot: 'Medium arrays that need an in-place speedup over insertion sort.' },
   heap: { time: 'O(n log n)', memory: 'O(1)', stability: 'No', sweetSpot: 'Disorder-heavy arrays where worst-case guarantees matter.' },
@@ -352,9 +355,17 @@ function buildWorkloadLabel() {
   return `${algorithmLabel} | ${baseArray.length} values | ${sortedness} sorted | ${duplicates} duplicates`;
 }
 
-function forecastAlgorithmForArray(values) {
+function computeArrayInsights(values) {
   if (!Array.isArray(values) || !values.length) {
-    return { key: 'quick', label: 'Quick Sort' };
+    return {
+      sortedness: 0,
+      duplicateRate: 0,
+      inversionRatio: 0,
+      spread: 0,
+      rangeWidth: 0,
+      uniqueCount: 0,
+      allIntegers: true,
+    };
   }
 
   const pairCount = Math.max(1, (values.length * (values.length - 1)) / 2);
@@ -371,13 +382,32 @@ function forecastAlgorithmForArray(values) {
   }
 
   const uniqueCount = new Set(values).size;
-  const duplicateRate = Math.round(((values.length - uniqueCount) / Math.max(1, values.length)) * 100);
-  const inversionRatio = inversions / pairCount;
-  const sortedness = Math.round((adjacentSorted / Math.max(1, values.length - 1)) * 100);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const rangeWidth = maxValue - minValue + 1;
+  return {
+    sortedness: Math.round((adjacentSorted / Math.max(1, values.length - 1)) * 100),
+    duplicateRate: Math.round(((values.length - uniqueCount) / Math.max(1, values.length)) * 100),
+    inversionRatio: inversions / pairCount,
+    spread: maxValue - minValue,
+    rangeWidth,
+    uniqueCount,
+    allIntegers: values.every((value) => Number.isInteger(value)),
+  };
+}
 
-  if (sortedness >= 82) return { key: 'insertion', label: 'Insertion Sort' };
-  if (duplicateRate >= 35) return { key: 'merge', label: 'Merge Sort' };
-  if (inversionRatio >= 0.72) return { key: 'heap', label: 'Heap Sort' };
+function forecastAlgorithmForArray(values) {
+  if (!Array.isArray(values) || !values.length) {
+    return { key: 'quick', label: 'Quick Sort' };
+  }
+
+  const insight = computeArrayInsights(values);
+  if (insight.sortedness >= 82) return { key: 'insertion', label: 'Insertion Sort' };
+  if (insight.allIntegers && insight.rangeWidth <= Math.max(24, values.length * 2) && insight.duplicateRate >= 18) {
+    return { key: 'counting', label: 'Counting Sort' };
+  }
+  if (insight.duplicateRate >= 35) return { key: 'merge', label: 'Merge Sort' };
+  if (insight.inversionRatio >= 0.72) return { key: 'heap', label: 'Heap Sort' };
   return { key: 'quick', label: 'Quick Sort' };
 }
 
@@ -457,25 +487,12 @@ function syncScrubber() {
 
 function updateDiagnostics() {
   if (!baseArray.length) return;
-
-  const pairCount = Math.max(1, (baseArray.length * (baseArray.length - 1)) / 2);
-  let inversions = 0;
-  for (let i = 0; i < baseArray.length; i += 1) {
-    for (let j = i + 1; j < baseArray.length; j += 1) {
-      if (baseArray[i] > baseArray[j]) inversions += 1;
-    }
-  }
-
-  let adjacentSorted = 0;
-  for (let i = 1; i < baseArray.length; i += 1) {
-    if (baseArray[i] >= baseArray[i - 1]) adjacentSorted += 1;
-  }
-
-  const uniqueCount = new Set(baseArray).size;
-  const duplicateRate = Math.round(((baseArray.length - uniqueCount) / Math.max(1, baseArray.length)) * 100);
+  const insight = computeArrayInsights(baseArray);
+  const uniqueCount = insight.uniqueCount;
+  const duplicateRate = insight.duplicateRate;
   const spread = `${Math.min(...baseArray)}-${Math.max(...baseArray)}`;
-  const inversionRatio = inversions / pairCount;
-  const sortedness = Math.round((adjacentSorted / Math.max(1, baseArray.length - 1)) * 100);
+  const inversionRatio = insight.inversionRatio;
+  const sortedness = insight.sortedness;
   const monotonicRuns = baseArray.reduce((count, value, index, values) => {
     if (index === 0) return 1;
     return value < values[index - 1] ? count + 1 : count;
@@ -503,6 +520,8 @@ function updateDiagnostics() {
   let recommendation = 'Quick Sort is a strong default when the input has no clear structural bias.';
   if (sortedness >= 82) {
     recommendation = 'Recommendation: Insertion Sort should stay competitive here because the array is already mostly ordered.';
+  } else if (insight.allIntegers && insight.rangeWidth <= Math.max(24, baseArray.length * 2) && duplicateRate >= 18) {
+    recommendation = 'Recommendation: Counting Sort is worth testing first because the integer range is tight enough that bucket rebuilding should stay cheap.';
   } else if (duplicateRate >= 35) {
     recommendation = 'Recommendation: Merge Sort is the safer benchmark here because duplicate-heavy inputs can make partition-based runs look noisy.';
   } else if (inversionRatio >= 0.72) {
@@ -552,6 +571,8 @@ function updateSelectionVerdict(metrics = null, rows = lastComparisonRows) {
         : `${selectedLabel} loses to ${winner.label} here, so demo it as a contrast rather than the headline performer.`;
   } else if (resolvedMetrics.sortedness >= 72 && selected === 'insertion') {
     summary = 'Insertion Sort is the best storytelling pick because the array is already mostly ordered.';
+  } else if ((metrics?.rangeWidth ?? computeArrayInsights(baseArray).rangeWidth) <= Math.max(24, baseArray.length * 2) && selected === 'counting') {
+    summary = 'Counting Sort has a strong story here because the workload stays inside a compact signed integer range.';
   } else if (resolvedMetrics.duplicateRate >= 40 && selected === 'radix') {
     summary = 'Radix Sort has a strong story here because the input is duplicate-heavy and digit-friendly.';
   } else if (resolvedMetrics.inversionRatio >= 0.58 && ['heap', 'quick'].includes(selected)) {
@@ -603,6 +624,11 @@ function updateExperimentCoach(metrics = null) {
     coach.contrast = 'Reversed preset';
     coach.angle = 'Show Shell Sort as the in-place bridge between insertion-style locality and heavier sorters.';
     coach.watch = 'Use the write count to show whether the gap passes are actually reducing churn.';
+  } else if (selected === 'counting') {
+    coach.best = 'Few Unique preset';
+    coach.contrast = 'Randomize, then switch to Merge Sort or Quick Sort.';
+    coach.angle = 'Treat Counting Sort as a compact-range specialist that can beat comparison-based baselines when the keys stay bounded.';
+    coach.watch = 'Point out that the win depends on range width, not just duplicate rate.';
   } else if (selected === 'merge' || selected === 'heap' || selected === 'quick') {
     coach.best = spread <= 35 ? 'Randomize for a wider spread.' : 'Current workload is already a fair benchmark.';
     coach.contrast = 'Few Unique preset';
@@ -643,6 +669,8 @@ function updateAlgorithmProfile(metrics = null) {
   let fit = `${algorithmSelect.options[algorithmSelect.selectedIndex].text} is a reasonable baseline on the current workload.`;
   if (algorithmSelect.value === 'insertion' && (insight.sortedness ?? 0) >= 80) {
     fit = 'Fit: high. The current array is already ordered enough that insertion sort should stay competitive.';
+  } else if (algorithmSelect.value === 'counting' && (insight.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2)) {
+    fit = 'Fit: high. The integer range is compact enough that counting buckets should stay efficient and easy to justify.';
   } else if (algorithmSelect.value === 'merge' && (insight.duplicateRate ?? 0) >= 30) {
     fit = 'Fit: high. Stable merging keeps duplicate-heavy workloads easier to reason about.';
   } else if (algorithmSelect.value === 'heap' && (insight.inversionRatio ?? 0) >= 0.65) {
@@ -673,6 +701,11 @@ function updateWorkloadMatchup(metrics) {
     baseline = 'Shell Sort';
     risk = 'Bubble Sort';
     summary = 'High pre-existing order should reward algorithms that preserve a nearly sorted prefix instead of rebuilding the array from scratch.';
+  } else if ((metrics.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2) && (metrics.duplicateRate ?? 0) >= 18) {
+    bestFit = 'Counting Sort';
+    baseline = 'Merge Sort';
+    risk = 'Bubble Sort';
+    summary = 'Compact signed integer ranges make non-comparison counting passes credible, especially when values repeat often enough to keep the buckets dense.';
   } else if ((metrics.duplicateRate ?? 0) >= 35) {
     bestFit = 'Merge Sort';
     baseline = 'Radix Sort';
@@ -690,6 +723,11 @@ function updateWorkloadMatchup(metrics) {
       (metrics.sortedness ?? 0) >= 82
         ? 'Insertion Sort is aligned with the current order bias and should stay competitive.'
         : 'Insertion Sort is playable here, but it needs stronger existing order to become the best fit.';
+  } else if (algorithmSelect.value === 'counting') {
+    selectedRead =
+      (metrics.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2)
+        ? 'Counting Sort is aligned with the compact key range and should be treated as a serious bounded-domain contender.'
+        : 'Counting Sort works, but the key range is wide enough that comparison-based baselines may tell the cleaner story.';
   } else if (algorithmSelect.value === 'merge') {
     selectedRead =
       (metrics.duplicateRate ?? 0) >= 35
@@ -738,6 +776,9 @@ function pickBestFitAlgorithm(metrics = computeArrayInsights(baseArray)) {
   if ((metrics.sortedness ?? 0) >= 82) {
     nextAlgorithm = 'insertion';
     reason = 'the array is already close to sorted.';
+  } else if ((metrics.allIntegers ?? true) && (metrics.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2) && (metrics.duplicateRate ?? 0) >= 18) {
+    nextAlgorithm = 'counting';
+    reason = 'the array stays inside a compact integer range, so counting buckets are a credible first-pass fit.';
   } else if ((metrics.duplicateRate ?? 0) >= 35) {
     nextAlgorithm = 'merge';
     reason = 'duplicate-heavy inputs reward a stable baseline.';
@@ -767,6 +808,11 @@ function estimateTheoryOps() {
 
   if (['merge', 'quick', 'heap', 'shell'].includes(algorithmSelect.value)) {
     return `~${nLogN}`;
+  }
+
+  if (algorithmSelect.value === 'counting') {
+    const insight = computeArrayInsights(currentArray);
+    return `~${n + Math.max(1, insight.rangeWidth)}`;
   }
 
   if (algorithmSelect.value === 'radix') {
@@ -1510,6 +1556,34 @@ function radixSortSteps(values) {
       });
     });
   }
+
+  return output;
+}
+
+function countingSortSteps(values) {
+  const arr = [...values];
+  const output = [];
+  if (!arr.length) return output;
+
+  const minValue = Math.min(...arr);
+  const maxValue = Math.max(...arr);
+  const offset = -minValue;
+  const counts = Array.from({ length: maxValue - minValue + 1 }, () => 0);
+
+  arr.forEach((value, index) => {
+    output.push({ type: 'compare', indices: [index, index] });
+    counts[value + offset] += 1;
+  });
+
+  let writeIndex = 0;
+  counts.forEach((count, bucketIndex) => {
+    const value = bucketIndex - offset;
+    for (let repeat = 0; repeat < count; repeat += 1) {
+      arr[writeIndex] = value;
+      output.push({ type: 'overwrite', index: writeIndex, value });
+      writeIndex += 1;
+    }
+  });
 
   return output;
 }

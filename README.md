@@ -4,7 +4,8 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 
 ## Features
 
-- Sorting algorithms: Bubble, Insertion, Merge, Shell, Heap, Quick, Radix.
+- Sorting algorithms: Bubble, Insertion, Counting, Merge, Shell, Heap, Quick, Radix.
+- Counting Sort now handles signed integer workloads when the key range stays compact enough to justify bucket reconstruction.
 - Radix Sort now handles signed integer workloads by offsetting negative values before each digit pass.
 - Input-shape presets now include organ-pipe and sawtooth arrays for less textbook-looking workload contrasts.
 - Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
@@ -14,7 +15,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
-- One-click comparison snapshot across all implemented sorting algorithms.
+- One-click comparison snapshot across all implemented sorting algorithms, including bounded-range specialists like Counting Sort.
 - Comparison snapshot can now be re-ranked by total work, comparisons, writes, or swaps without rerunning the workload.
 - Operation counters:
   - Comparisons
@@ -58,6 +59,7 @@ Instead of sorting directly in the DOM, each algorithm produces a list of determ
 2. Use `Auto Pick` when you want the app to choose the most defensible first algorithm for that workload.
 3. Run `Compare All` to benchmark the same input across the full implemented set.
 4. Export the comparison CSV or copy the benchmark brief when you need a reusable walkthrough artifact.
+5. Use Counting Sort on a tight-range imported workload to show when `O(n + k)` actually beats comparison-based baselines.
 
 ## Local Run
 
