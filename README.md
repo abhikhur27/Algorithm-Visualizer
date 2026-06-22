@@ -12,6 +12,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 - Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
 - Shortcut support now includes `P` for best-fit auto-pick before a compare-all pass.
 - Keyboard shortcut `G` now runs the full preset gauntlet benchmark without reaching for the mouse.
+- Copy Gauntlet Brief packages the current preset-family winners, baseline sorter, and largest upset into one reusable walkthrough note.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
@@ -108,6 +109,7 @@ For consistent portfolio claims, use this benchmark script before sharing result
 3. Run `Organ Pipe` or `Sawtooth` at 80 bars to stress non-random local structure.
 4. Run `Reversed` at 120 bars and capture `Compare All`.
 5. Report the best/worst algorithm by workload type rather than one global winner.
+6. Run `G` or click `Run Gauntlet`, then use `Copy Gauntlet Brief` when you need a portable cross-workload summary.
 
 ## Quick Verification Command
 

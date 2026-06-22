@@ -11,6 +11,7 @@ const exportArrayBtn = document.getElementById('export-array-btn');
 const exportCompareBtn = document.getElementById('export-compare-btn');
 const exportCompareTapeBtn = document.getElementById('export-compare-tape-btn');
 const copyBriefBtn = document.getElementById('copy-brief-btn');
+const copyGauntletBriefBtn = document.getElementById('copy-gauntlet-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
 const gauntletBtn = document.getElementById('gauntlet-btn');
@@ -192,6 +193,7 @@ let stepIndex = 0;
 let timerId = null;
 let isRunning = false;
 let lastComparisonRows = [];
+let lastGauntletResults = [];
 let comparisonHistory = [];
 let savedWorkloads = [];
 let stats = {
@@ -1896,9 +1898,15 @@ function runPresetGauntlet() {
     return { workload: workload.label, rows };
   });
 
+  lastGauntletResults = results.map(({ workload, rows }) => ({
+    workload,
+    rows,
+    winner: rows[0],
+  }));
+
   const winCounts = {};
   const podiumCounts = {};
-  results.forEach(({ rows }) => {
+  lastGauntletResults.forEach(({ rows }) => {
     rows.forEach((row, index) => {
       podiumCounts[row.label] = (podiumCounts[row.label] || 0) + (rows.length - index);
     });
@@ -1907,7 +1915,7 @@ function runPresetGauntlet() {
 
   const leader = Object.keys(winCounts).sort((a, b) => winCounts[b] - winCounts[a])[0];
   const baseline = Object.keys(podiumCounts).sort((a, b) => podiumCounts[b] - podiumCounts[a])[0];
-  const biggestUpset = results
+  const biggestUpset = lastGauntletResults
     .map(({ workload, rows }) => ({
       workload,
       winner: rows[0],
@@ -2150,6 +2158,56 @@ function buildBenchmarkBrief() {
   return lines.join('\n');
 }
 
+function buildGauntletBrief() {
+  if (!lastGauntletResults.length) {
+    return [
+      'Algorithm Visualizer Gauntlet Brief',
+      '',
+      'Run the preset gauntlet before exporting a reusable workload-family summary.',
+    ].join('\n');
+  }
+
+  const winCounts = {};
+  const podiumCounts = {};
+  lastGauntletResults.forEach((result) => {
+    winCounts[result.winner.label] = (winCounts[result.winner.label] || 0) + 1;
+    result.rows.slice(0, 3).forEach((row, index) => {
+      podiumCounts[row.label] = (podiumCounts[row.label] || 0) + (3 - index);
+    });
+  });
+
+  const leader = Object.entries(winCounts).sort((left, right) => right[1] - left[1])[0]?.[0] || 'No leader';
+  const baseline = Object.entries(podiumCounts).sort((left, right) => right[1] - left[1])[0]?.[0] || leader;
+
+  const biggestUpset = lastGauntletResults
+    .map((result) => ({
+      workload: result.workload,
+      winner: result.winner.label,
+      margin: Math.max(0, (result.rows[1]?.total || result.winner.total) - result.winner.total),
+    }))
+    .sort((left, right) => right.margin - left.margin)[0];
+
+  const lines = [
+    'Algorithm Visualizer Gauntlet Brief',
+    '',
+    `Current metric: ${comparisonMetricLabels[getSelectedComparisonMetric()]}`,
+    `Leader: ${leader}`,
+    `Baseline: ${baseline}`,
+    biggestUpset ? `Largest upset: ${biggestUpset.workload} | ${biggestUpset.winner} by ${biggestUpset.margin} ops` : 'Largest upset: -',
+    `Narration cue: ${gauntletCueEl?.textContent || 'Run the gauntlet to populate the cross-workload cue.'}`,
+    '',
+    'Workload winners:',
+  ];
+
+  lastGauntletResults.forEach((result, index) => {
+    lines.push(
+      `${index + 1}. ${result.workload}: ${result.winner.label} over ${result.rows[1]?.label || result.winner.label} (${result.winner.total} total ops)`
+    );
+  });
+
+  return lines.join('\n');
+}
+
 function resetToBase() {
   stopPlayback();
   currentArray = [...baseArray];
@@ -2375,6 +2433,14 @@ copyBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildBenchmarkBrief());
     setStatus('Copied a benchmark brief with the current workload and algorithm summary.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
+copyGauntletBriefBtn?.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(buildGauntletBrief());
+    setStatus(lastGauntletResults.length ? 'Copied the current gauntlet brief.' : 'Copied a gauntlet prompt; run the gauntlet to populate results.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }
