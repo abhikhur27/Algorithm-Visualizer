@@ -10,10 +10,12 @@ const shareArrayBtn = document.getElementById('share-array-btn');
 const exportArrayBtn = document.getElementById('export-array-btn');
 const exportCompareBtn = document.getElementById('export-compare-btn');
 const exportCompareTapeBtn = document.getElementById('export-compare-tape-btn');
+const importCompareTapeBtn = document.getElementById('import-compare-tape-btn');
 const copyBriefBtn = document.getElementById('copy-brief-btn');
 const copyGauntletBriefBtn = document.getElementById('copy-gauntlet-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
+const importCompareTapeFile = document.getElementById('import-compare-tape-file');
 const gauntletBtn = document.getElementById('gauntlet-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
@@ -2133,6 +2135,107 @@ function exportComparisonTape() {
   setStatus('Exported compare tape with the latest benchmark snapshot and saved history.');
 }
 
+function normalizeComparisonRow(row) {
+  if (!row || typeof row.label !== 'string') return null;
+  const comparisons = Number(row.comparisons);
+  const swaps = Number(row.swaps);
+  const writes = Number(row.writes);
+  if (![comparisons, swaps, writes].every(Number.isFinite)) return null;
+  const total = Number.isFinite(Number(row.total)) ? Number(row.total) : comparisons + swaps + writes;
+  return {
+    label: row.label,
+    comparisons,
+    swaps,
+    writes,
+    total,
+  };
+}
+
+function normalizeComparisonHistoryEntry(entry) {
+  if (!entry || typeof entry.best !== 'string' || typeof entry.summary !== 'string') return null;
+  return {
+    best: entry.best,
+    arrayLabel: typeof entry.arrayLabel === 'string' ? entry.arrayLabel : 'Imported workload',
+    arrayPreview: typeof entry.arrayPreview === 'string' ? entry.arrayPreview : '',
+    summary: entry.summary,
+  };
+}
+
+function applyImportedComparisonRows(rows) {
+  if (!rows.length) {
+    lastComparisonRows = [];
+    renderComparisonRows();
+    renderContrastPlanner();
+    renderSelectionStory();
+    renderSelectionTrackRecord();
+    updateBenchmarkVerdict();
+    return;
+  }
+
+  const rankedRows = rankComparisonRows(rows);
+  lastComparisonRows = rankedRows;
+  renderComparisonRows(rankedRows);
+  renderContrastPlanner(rankedRows);
+  renderSelectionStory(rankedRows);
+  renderSelectionTrackRecord(rankedRows);
+  updateBenchmarkVerdict(rankedRows);
+}
+
+function importComparisonTape(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || '{}'));
+      const importedArray = Array.isArray(parsed.array) ? parsed.array.map((value) => Number.parseInt(value, 10)).filter(Number.isInteger) : [];
+      const latestRows = Array.isArray(parsed.latestComparison)
+        ? parsed.latestComparison.map(normalizeComparisonRow).filter(Boolean)
+        : [];
+      const importedHistory = Array.isArray(parsed.comparisonHistory)
+        ? parsed.comparisonHistory.map(normalizeComparisonHistoryEntry).filter(Boolean).slice(0, 5)
+        : [];
+
+      if (!importedArray.length && !latestRows.length && !importedHistory.length) {
+        throw new Error('Compare tape did not contain array or benchmark data.');
+      }
+
+      if (importedArray.length >= 5 && importedArray.length <= 120) {
+        const normalized = importedArray.map((value) => Math.max(4, Math.min(100, value)));
+        customArrayInput.value = normalized.join(', ');
+        sizeSlider.value = String(normalized.length);
+        sizeValue.textContent = String(normalized.length);
+        setBaseArray(normalized, `Imported compare tape workload (${normalized.length} values).`);
+      }
+
+      if (typeof parsed.algorithm === 'string' && algorithmSelect.querySelector(`option[value="${parsed.algorithm}"]`)) {
+        algorithmSelect.value = parsed.algorithm;
+        updateNote();
+        updateAlgorithmProfile();
+        updateSelectionVerdict();
+        updateExperimentCoach();
+      }
+
+      comparisonHistory = importedHistory;
+      renderComparisonHistory();
+      applyImportedComparisonRows(latestRows);
+      persistState();
+      setStatus(
+        latestRows.length
+          ? `Imported compare tape with ${latestRows.length} ranked algorithms and ${comparisonHistory.length} saved snapshot${comparisonHistory.length === 1 ? '' : 's'}.`
+          : `Imported compare tape history with ${comparisonHistory.length} saved snapshot${comparisonHistory.length === 1 ? '' : 's'}.`
+      );
+    } catch (error) {
+      setStatus('Could not import that compare tape. Use a JSON file exported from this visualizer.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 function buildBenchmarkBrief() {
   const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Selected algorithm';
   const lines = [
@@ -2456,6 +2559,8 @@ shareArrayBtn?.addEventListener('click', async () => {
 });
 importArrayBtn?.addEventListener('click', () => importArrayFile?.click());
 importArrayFile?.addEventListener('change', importArray);
+importCompareTapeBtn?.addEventListener('click', () => importCompareTapeFile?.click());
+importCompareTapeFile?.addEventListener('change', importComparisonTape);
 randomizeBtn.addEventListener('click', regenerateArray);
 applyArrayBtn.addEventListener('click', applyCustomArray);
 presetArrayButtons.forEach((button) => {
