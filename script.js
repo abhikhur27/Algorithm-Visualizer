@@ -16,6 +16,9 @@ const copyGauntletBriefBtn = document.getElementById('copy-gauntlet-brief-btn');
 const importArrayBtn = document.getElementById('import-array-btn');
 const importArrayFile = document.getElementById('import-array-file');
 const importCompareTapeFile = document.getElementById('import-compare-tape-file');
+const exportWorkloadShelfBtn = document.getElementById('export-workload-shelf-btn');
+const importWorkloadShelfBtn = document.getElementById('import-workload-shelf-btn');
+const importWorkloadShelfFile = document.getElementById('import-workload-shelf-file');
 const gauntletBtn = document.getElementById('gauntlet-btn');
 const sizeValue = document.getElementById('size-value');
 const speedValue = document.getElementById('speed-value');
@@ -1720,6 +1723,86 @@ function saveCurrentWorkload() {
   setStatus('Saved the current workload for repeatable benchmark runs.');
 }
 
+function normalizeSavedWorkloadEntry(entry) {
+  if (!entry || !Array.isArray(entry.array)) return null;
+
+  const array = entry.array
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => Number.isInteger(value))
+    .map((value) => Math.max(4, Math.min(100, value)));
+  if (array.length < 5 || array.length > 120) return null;
+
+  return {
+    serialized: array.join(','),
+    array,
+    label: typeof entry.label === 'string' ? entry.label : `Imported workload (${array.length} values)`,
+    preview: typeof entry.preview === 'string' ? entry.preview : array.slice(0, 12).join(', '),
+    note: typeof entry.note === 'string' ? entry.note : 'Imported workload shelf entry.',
+    recommendedAlgorithmKey: typeof entry.recommendedAlgorithmKey === 'string' ? entry.recommendedAlgorithmKey : '',
+    recommendedAlgorithmLabel: typeof entry.recommendedAlgorithmLabel === 'string' ? entry.recommendedAlgorithmLabel : 'Review workload',
+  };
+}
+
+function exportWorkloadShelf() {
+  if (!savedWorkloads.length) {
+    setStatus('Save at least one workload before exporting the shelf.');
+    return;
+  }
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    savedWorkloads,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'algorithm-visualizer-workload-shelf.json';
+  link.click();
+  URL.revokeObjectURL(url);
+  setStatus(`Exported workload shelf with ${savedWorkloads.length} saved workload${savedWorkloads.length === 1 ? '' : 's'}.`);
+}
+
+function importWorkloadShelf(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || '{}'));
+      const importedEntries = Array.isArray(parsed.savedWorkloads)
+        ? parsed.savedWorkloads.map(normalizeSavedWorkloadEntry).filter(Boolean)
+        : Array.isArray(parsed)
+          ? parsed.map(normalizeSavedWorkloadEntry).filter(Boolean)
+          : [];
+
+      if (!importedEntries.length) {
+        throw new Error('No valid workload shelf entries were found in that file.');
+      }
+
+      savedWorkloads = [...importedEntries, ...savedWorkloads]
+        .reduce((acc, entry) => {
+          if (!acc.some((existing) => existing.serialized === entry.serialized)) {
+            acc.push(entry);
+          }
+          return acc;
+        }, [])
+        .slice(0, 5);
+      persistState();
+      renderSavedWorkloads();
+      setStatus(`Imported workload shelf with ${importedEntries.length} reusable workload${importedEntries.length === 1 ? '' : 's'}.`);
+    } catch (error) {
+      setStatus(error.message || 'Could not import that workload shelf file.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 function renderStabilityRead() {
   if (!stabilitySummaryEl || !stabilityStreakEl || !stabilitySpreadEl || !stabilityBaselineEl || !stabilityCueEl) return;
 
@@ -2561,6 +2644,9 @@ importArrayBtn?.addEventListener('click', () => importArrayFile?.click());
 importArrayFile?.addEventListener('change', importArray);
 importCompareTapeBtn?.addEventListener('click', () => importCompareTapeFile?.click());
 importCompareTapeFile?.addEventListener('change', importComparisonTape);
+exportWorkloadShelfBtn?.addEventListener('click', exportWorkloadShelf);
+importWorkloadShelfBtn?.addEventListener('click', () => importWorkloadShelfFile?.click());
+importWorkloadShelfFile?.addEventListener('change', importWorkloadShelf);
 randomizeBtn.addEventListener('click', regenerateArray);
 applyArrayBtn.addEventListener('click', applyCustomArray);
 presetArrayButtons.forEach((button) => {

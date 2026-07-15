@@ -13,6 +13,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 - Shortcut support now includes `P` for best-fit auto-pick before a compare-all pass.
 - Keyboard shortcut `G` now runs the full preset gauntlet benchmark without reaching for the mouse.
 - Copy Gauntlet Brief packages the current preset-family winners, baseline sorter, and largest upset into one reusable walkthrough note.
+- Saved workload shelf can now be exported/imported as JSON so repeatable benchmark families survive beyond one browser session.
 - Step scrubber for dragging directly to any replay point after generating operations.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
