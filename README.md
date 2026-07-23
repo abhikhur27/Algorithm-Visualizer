@@ -15,6 +15,7 @@ Browser sorting visualizer for studying algorithm behavior step-by-step.
 - Copy Gauntlet Brief packages the current preset-family winners, baseline sorter, and largest upset into one reusable walkthrough note.
 - Saved workload shelf can now be exported/imported as JSON so repeatable benchmark families survive beyond one browser session.
 - Step scrubber for dragging directly to any replay point after generating operations.
+- Replay checkpoint buttons jump straight to 25%, 50%, 75%, or the final frame so live demos do not require dragging through long traces.
 - Adjustable array size and animation speed.
 - Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
 - One-click comparison snapshot across all implemented sorting algorithms, including bounded-range specialists like Counting Sort.
