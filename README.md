@@ -1,70 +1,49 @@
 # Algorithm Visualizer
 
-Browser sorting visualizer for studying algorithm behavior step-by-step.
+Watch eight sorting algorithms work through the same array: Bubble, Insertion, Counting, Merge, Shell, Heap, Quick, and Radix Sort.
 
-## Features
+Each algorithm records comparisons, swaps, and writes before playback starts. You can pause, step forward or back, or jump to a point in the run. Compare All runs the algorithms on the same input and lists their operation counts.
 
-- Sorting algorithms: Bubble, Insertion, Counting, Merge, Shell, Heap, Quick, Radix.
-- Counting Sort now handles signed integer workloads when the key range stays compact enough to justify bucket reconstruction.
-- Radix Sort now handles signed integer workloads by offsetting negative values before each digit pass.
-- Input-shape presets now include organ-pipe and sawtooth arrays for less textbook-looking workload contrasts.
-- Tight control surface: apply array, randomize, compare all, start/pause/step/back/reset.
-- Auto-pick best-fit control uses workload shape to recommend the most defensible first sorter before benchmarking.
-- Shortcut support now includes `P` for best-fit auto-pick before a compare-all pass.
-- Keyboard shortcut `G` now runs the full preset gauntlet benchmark without reaching for the mouse.
-- Copy Gauntlet Brief packages the current preset-family winners, baseline sorter, and largest upset into one reusable walkthrough note.
-- Saved workload shelf can now be exported/imported as JSON so repeatable benchmark families survive beyond one browser session.
-- Step scrubber for dragging directly to any replay point after generating operations.
-- Replay checkpoint buttons jump straight to 25%, 50%, 75%, or the final frame so live demos do not require dragging through long traces.
-- Adjustable array size and animation speed.
-- Core diagnostics: sortedness, duplicate rate, value spread, inversions, algorithm profile, and benchmark verdict.
-- One-click comparison snapshot across all implemented sorting algorithms, including bounded-range specialists like Counting Sort.
-- Comparison snapshot can now be re-ranked by total work, comparisons, writes, or swaps without rerunning the workload.
-- Operation counters:
-  - Comparisons
-  - Swaps
-  - Writes
-- Responsive bar visualization with color-coded state legend.
+## Try it
 
-## Technical Design
+1. Choose the Reversed preset.
+2. Click Compare All and compare the counts.
+3. Select Quick Sort and press Step to follow its partitioning.
+4. Try Nearly Sorted with Insertion Sort and compare the amount of work.
+5. Use Compare Six Presets to run Randomized, Nearly Sorted, Reversed, Few Unique, Organ Pipe, and Sawtooth inputs.
 
-- `index.html`: semantic controls and metrics layout.
-- `style.css`: responsive visual system and high-contrast states.
-- `script.js`: operation-generation approach where each algorithm emits replayable steps.
+The size slider supports 10 to 80 values. The speed control changes the animation delay, not the sorting algorithm.
 
-```mermaid
-flowchart TD
-  A[Generate Random Array] --> B[Select Algorithm]
-  B --> C[Create Operation Steps]
-  C --> D[Playback Engine]
-  D --> E[Array Renderer]
-  D --> F[Metric Counters]
-```
+## Reading the results
 
-## Why This Design
+- Comparisons check the order of two values.
+- Swaps exchange a pair of values.
+- Writes place a value into an array slot.
+- Total operations adds the recorded comparisons, swaps, and writes.
 
-Instead of sorting directly in the DOM, each algorithm produces a list of deterministic operations (`compare`, `swap`, `overwrite`). That makes the UI easier to test, pause/resume, and step through.
+These counts describe this implementation on a particular input. They are not elapsed-time measurements and do not include every instruction the browser executes. Complexity estimates are rough comparisons, not exact predictions of the step count.
 
-## Demo Flow
+The suggestion panels use the array's order, repeated values, and numeric range to recommend an algorithm to try. Check those suggestions with Compare All.
 
-1. Load a patterned workload.
-2. Use `Best Fit` before a full compare-all pass.
-3. Export the comparison CSV when the theory-vs-runtime tradeoff becomes visible.
+## Use your own arrays
 
-## Honest Label
+Enter values separated by commas, spaces, or newlines, or import a JSON, CSV, or text file. Counting and Radix Sort support signed integers. Counting Sort is most useful when the integer range is small.
 
-- Project type: browser sorting visualizer
-- Stack truth: HTML, CSS, JavaScript
+Copy Share Link saves the selected algorithm, array, and controls in the URL. Save Workload keeps an array in this browser. You can also export arrays, saved examples, comparison history, and comparison CSV files.
 
-## Demo workflow
+Copy Comparison Notes and Copy Preset Results put the current results on your clipboard.
 
-1. Generate or import an array.
-2. Use `Auto Pick` when you want the app to choose the most defensible first algorithm for that workload.
-3. Run `Compare All` to benchmark the same input across the full implemented set.
-4. Export the comparison CSV or copy the benchmark brief when you need a reusable walkthrough artifact.
-5. Use Counting Sort on a tight-range imported workload to show when `O(n + k)` actually beats comparison-based baselines.
+## How it works
 
-## Local Run
+- `index.html` contains the controls and result sections.
+- `style.css` handles the bar chart, layout, and operation colors.
+- `script.js` generates operation lists and plays them back against the displayed array.
+
+Recording the operations separately makes it possible to rebuild any earlier frame when you step backward.
+
+This is a static HTML, CSS, and JavaScript browser demo. It runs from the repository root on GitHub Pages.
+
+## Run locally
 
 ```bash
 python -m http.server 8000
@@ -72,49 +51,11 @@ python -m http.server 8000
 
 Open `http://localhost:8000`.
 
-## Reproducible Workloads
+Check JavaScript syntax with:
 
-- The app preserves its active workload in the URL, so shared links can reopen the same sorter, sliders, and array state.
-- The UI now exposes the whole workload utility shelf directly: share link, save workload, import/export, compare CSV, compare tape, and gauntlet runs.
-- Use the built-in share/export controls when you want a benchmark discussion to stay tied to one exact input shape instead of a fresh random run.
+```bash
+node --check script.js
+```
 
-## Portfolio Demo Path
-
-1. Load the `Reversed` preset.
-2. Run `Compare All` to create a benchmark verdict.
-3. Scrub through Quick Sort or Merge Sort to show replayable operations.
-4. Contrast with Bubble Sort to make performance tradeoffs obvious.
-
-## GitHub Pages Compatibility
-
-- Pure static assets.
-- No build pipeline required.
-- Deploy from repository root.
-
-## Portfolio Positioning
-
-- Honest label: browser-based sorting visualizer, not native systems software.
-- Strongest portfolio use: replayable algorithm explanation and workload comparison.
-- Current quality bar: keep the control surface teachable and avoid turning the page into a diagnostics wall.
-
-## Future Improvements
-
-- Add side-by-side visual diffing between two selected sorters on the same workload.
-- Add comparison history across multiple imported workloads.
-
-## Sanity Benchmark Script
-
-For consistent portfolio claims, use this benchmark script before sharing results:
-
-1. Run `Nearly Sorted` at 80 bars and capture `Compare All`.
-2. Run `Few Unique` at 80 bars and capture `Compare All`.
-3. Run `Organ Pipe` or `Sawtooth` at 80 bars to stress non-random local structure.
-4. Run `Reversed` at 120 bars and capture `Compare All`.
-5. Report the best/worst algorithm by workload type rather than one global winner.
-6. Run `G` or click `Run Gauntlet`, then use `Copy Gauntlet Brief` when you need a portable cross-workload summary.
-
-## Quick Verification Command
-
-Run this syntax check before sharing updates:
-- node --check script.js
+Before publishing, try a preset, run Compare All, step forward and back, and export then import an array. Compare several input patterns before making a claim about an algorithm's performance.
 

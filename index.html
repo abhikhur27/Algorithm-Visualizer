@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Algorithm Visualizer</title>
-  <meta name="description" content="Sorting visualizer with replayable operation streams, benchmark comparisons, and exportable workload briefs.">
+  <meta name="description" content="Watch eight sorting algorithms work through the same array. Step through each comparison and swap, then compare their operation counts.">
   <meta property="og:title" content="Algorithm Visualizer">
-  <meta property="og:description" content="Study sorting algorithms through step playback, compare-all benchmarks, and workload diagnostics.">
+  <meta property="og:description" content="Step through sorting algorithms, try different arrays, and compare the work each algorithm does.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://abhikhur27.github.io/Algorithm-Visualizer/">
+  <meta property="og:url" content="https://abhikhur.com/Algorithm-Visualizer/">
   <meta name="theme-color" content="#0f1116">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,12 +17,12 @@
 </head>
 <body>
   <header class="header container">
-    <a class="back-link" href="https://abhikhur27.github.io/" target="_blank" rel="noreferrer">Back to Portfolio</a>
+    <a class="back-link" href="https://abhikhur.com/" target="_blank" rel="noreferrer">Back to Portfolio</a>
     <h1>Algorithm Visualizer</h1>
-    <p>Browser sorting visualizer with controllable playback, step execution, and operation counters.</p>
-    <section class="demo-strip" aria-label="Suggested portfolio demo path">
-      <strong>Demo path:</strong>
-      <span>Load Reversed -> Compare All -> scrub Quick Sort to explain behavior and tradeoffs.</span>
+    <p>Watch eight sorting algorithms work through an array. Pause on a comparison, step back through a swap, or compare how much work each one does on the same input.</p>
+    <section class="demo-strip" aria-label="Suggested first steps">
+      <strong>Try it:</strong>
+      <span>Choose Reversed, click Compare All, then step through Quick Sort to see why the counts differ.</span>
     </section>
   </header>
 
@@ -55,7 +55,7 @@
       </label>
 
       <label>
-        Custom Array (comma, space, or newline)
+        Your array (separate numbers with commas or spaces)
         <input id="custom-array" type="text" placeholder="e.g. 44, 12, 98, 7, 31">
       </label>
 
@@ -82,15 +82,15 @@
       <div class="buttons">
         <button id="share-array-btn" type="button">Copy Share Link</button>
         <button id="save-workload-btn" type="button">Save Workload</button>
-        <button id="export-workload-shelf-btn" type="button">Export Workload Shelf</button>
-        <button id="import-workload-shelf-btn" type="button">Import Workload Shelf</button>
-        <button id="gauntlet-btn" type="button">Run Gauntlet</button>
-        <button id="copy-gauntlet-brief-btn" type="button">Copy Gauntlet Brief</button>
-        <button id="copy-brief-btn" type="button">Copy Benchmark Brief</button>
+        <button id="export-workload-shelf-btn" type="button">Export Saved Arrays</button>
+        <button id="import-workload-shelf-btn" type="button">Import Saved Arrays</button>
+        <button id="gauntlet-btn" type="button">Compare Six Presets</button>
+        <button id="copy-gauntlet-brief-btn" type="button">Copy Preset Results</button>
+        <button id="copy-brief-btn" type="button">Copy Comparison Notes</button>
         <button id="export-array-btn" type="button">Export Array</button>
         <button id="export-compare-btn" type="button">Export Compare CSV</button>
-        <button id="export-compare-tape-btn" type="button">Export Compare Tape</button>
-        <button id="import-compare-tape-btn" type="button">Import Compare Tape</button>
+        <button id="export-compare-tape-btn" type="button">Export Comparison History</button>
+        <button id="import-compare-tape-btn" type="button">Import Comparison History</button>
         <button id="import-array-btn" type="button">Import Array</button>
       </div>
       <input id="import-array-file" type="file" accept=".json,.csv,.txt" hidden>
@@ -131,7 +131,7 @@
           <p id="step-progress">0 / 0</p>
         </article>
         <article role="listitem">
-          <h3>Theory Ops</h3>
+          <h3>Complexity Estimate</h3>
           <p id="theory-ops">-</p>
         </article>
       </div>
@@ -150,10 +150,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Workload Diagnostics</h2>
-            <p>Read how the current input is shaped before you benchmark it.</p>
+            <h2>About this array</h2>
+            <p>See how ordered the values are and how often they repeat.</p>
           </div>
-          <p id="diagnostic-recommendation" class="comparison-summary">Generate an array to inspect its workload shape.</p>
+          <p id="diagnostic-recommendation" class="comparison-summary">Load an array to see its order and repeated values.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -178,14 +178,14 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Selection Verdict</h2>
-            <p>Turn the current sorter choice into a stronger demo claim before you benchmark it.</p>
+            <h2>Your algorithm choice</h2>
+            <p>Check how the selected algorithm fits this array, then use Compare All to test the suggestion.</p>
           </div>
         </div>
         <div class="diagnostics-grid">
           <article>
             <h3>Verdict</h3>
-            <p id="selection-verdict-summary">Generate an array to score the current picker.</p>
+            <p id="selection-verdict-summary">Load an array to check the selected algorithm.</p>
           </article>
           <article>
             <h3>Best Use</h3>
@@ -205,10 +205,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Replay Teaching Cut</h2>
-            <p>Five checkpoints for explaining the run without narrating every operation.</p>
+            <h2>Steps worth looking at</h2>
+            <p>Five points in the run where you can see what the algorithm is doing.</p>
           </div>
-          <p id="teaching-cut-summary" class="comparison-summary">Generate steps to get a compact narration path.</p>
+          <p id="teaching-cut-summary" class="comparison-summary">Start a run to see its checkpoints.</p>
         </div>
         <ol id="teaching-cut-list" class="teaching-cut-list"></ol>
       </section>
@@ -216,8 +216,8 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Algorithm Profile</h2>
-            <p>Read the current sorter as an engineering tradeoff, not just an animation.</p>
+            <h2>About this algorithm</h2>
+            <p>Compare its time and memory requirements. Stable sorts keep equal values in their original relative order.</p>
           </div>
           <p id="profile-fit" class="comparison-summary">Select an algorithm to inspect its fit.</p>
         </div>
@@ -235,7 +235,7 @@
             <p id="profile-stability">-</p>
           </article>
           <article>
-            <h3>Sweet Spot</h3>
+            <h3>Useful For</h3>
             <p id="profile-sweet-spot">-</p>
           </article>
         </div>
@@ -244,10 +244,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Array Fingerprint</h2>
-            <p>Turn the current workload into a compact profile before comparing raw operation counts.</p>
+            <h2>Array details</h2>
+            <p>Look at stretches already in order, gaps between neighbors, and the number of distinct values.</p>
           </div>
-          <p id="fingerprint-summary" class="comparison-summary">Generate an array to compute its local shape signals.</p>
+          <p id="fingerprint-summary" class="comparison-summary">Load an array to see these details.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -272,10 +272,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Workload Matchup</h2>
-            <p>Predict which sorter families should fit this array before you spend time benchmarking every option.</p>
+            <h2>Algorithms to try</h2>
+            <p>These suggestions use the array's order and repeated values. Compare All checks them against the operation counts.</p>
           </div>
-          <p id="matchup-summary" class="comparison-summary">Generate an array to forecast the best and riskiest sorter fits.</p>
+          <p id="matchup-summary" class="comparison-summary">Load an array to get a starting suggestion.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -287,11 +287,11 @@
             <p id="matchup-baseline">-</p>
           </article>
           <article>
-            <h3>Risk Pick</h3>
+            <h3>May Do More Work</h3>
             <p id="matchup-risk">-</p>
           </article>
           <article>
-            <h3>Selected Read</h3>
+            <h3>Your Selection</h3>
             <p id="matchup-selected">-</p>
           </article>
         </div>
@@ -300,10 +300,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Experiment Coach</h2>
-            <p>Turn the current algorithm and workload into the next contrast run worth showing in a portfolio demo.</p>
+            <h2>Try a different input</h2>
+            <p>Keep the same algorithm and change the array to see how its operation count changes.</p>
           </div>
-          <p id="experiment-coach-summary" class="comparison-summary">Generate an array to stage the next contrast test.</p>
+          <p id="experiment-coach-summary" class="comparison-summary">Load an array to get a comparison to try.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -311,15 +311,15 @@
             <p id="experiment-coach-best">-</p>
           </article>
           <article>
-            <h3>Contrast Move</h3>
+            <h3>Compare Against</h3>
             <p id="experiment-coach-contrast">-</p>
           </article>
           <article>
-            <h3>Demo Framing</h3>
+            <h3>Look For</h3>
             <p id="experiment-coach-angle">-</p>
           </article>
           <article>
-            <h3>Operator Note</h3>
+            <h3>Keep In Mind</h3>
             <p id="experiment-coach-watch">-</p>
           </article>
         </div>
@@ -328,8 +328,8 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Operation Lens</h2>
-            <p>Translate the current replay step into a human-readable algorithm move.</p>
+            <h2>What this step does</h2>
+            <p>See which values the algorithm compares, swaps, or writes.</p>
           </div>
           <p id="operation-summary" class="comparison-summary">Generate an array to inspect the operation mix.</p>
         </div>
@@ -356,10 +356,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Replay Budget</h2>
-            <p>Estimate how long the current run will take to show and whether the replay is dense enough for a live demo.</p>
+            <h2>Playback time</h2>
+            <p>Estimate the animation length at your selected speed. This is playback time, not a measurement of sorting speed.</p>
           </div>
-          <p id="replay-budget-summary" class="comparison-summary">Generate a run to estimate its playback budget.</p>
+          <p id="replay-budget-summary" class="comparison-summary">Start a run to estimate its playback time.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -375,7 +375,7 @@
             <p id="replay-budget-density">-</p>
           </article>
           <article>
-            <h3>Demo Cue</h3>
+            <h3>Playback Tip</h3>
             <p id="replay-budget-cue">-</p>
           </article>
         </div>
@@ -384,10 +384,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Run Volatility</h2>
-            <p>Read whether the replay is smooth, bursty, or dominated by one disruptive phase before you narrate it live.</p>
+            <h2>Patterns in the steps</h2>
+            <p>Find long stretches of comparisons or writes and see where the operation pattern changes.</p>
           </div>
-          <p id="volatility-summary" class="comparison-summary">Generate a run to inspect its burstiness and pacing shifts.</p>
+          <p id="volatility-summary" class="comparison-summary">Start a run to see how its steps are grouped.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -403,7 +403,7 @@
             <p id="volatility-turning-point">-</p>
           </article>
           <article>
-            <h3>Demo Cue</h3>
+            <h3>Look For</h3>
             <p id="volatility-cue">-</p>
           </article>
         </div>
@@ -412,10 +412,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Operation Posture</h2>
-            <p>Classify whether the current sorter is mostly scouting, exchanging, or rebuilding so the replay has a sharper teaching angle.</p>
+            <h2>Where the work goes</h2>
+            <p>Check whether most steps compare values, swap pairs, or write values back into the array.</p>
           </div>
-          <p id="operation-posture-summary" class="comparison-summary">Generate a run to classify its operation posture.</p>
+          <p id="operation-posture-summary" class="comparison-summary">Start a run to compare its operation types.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -423,11 +423,11 @@
             <p id="operation-posture-dominant">-</p>
           </article>
           <article>
-            <h3>Commit Rhythm</h3>
+            <h3>Changes Between Comparisons</h3>
             <p id="operation-posture-rhythm">-</p>
           </article>
           <article>
-            <h3>Teaching Angle</h3>
+            <h3>Look For</h3>
             <p id="operation-posture-angle">-</p>
           </article>
           <article>
@@ -440,10 +440,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Momentum Window</h2>
-            <p>Split the replay into opening, middle, and closing windows so the teaching beat changes are visible before you scrub through the whole run.</p>
+            <h2>Start, middle, and finish</h2>
+            <p>Compare the operation counts across three parts of the run.</p>
           </div>
-          <p id="momentum-window-summary" class="comparison-summary">Generate a run to inspect where the replay actually spends its effort.</p>
+          <p id="momentum-window-summary" class="comparison-summary">Start a run to see where it does the most work.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -459,7 +459,7 @@
             <p id="momentum-window-closing">-</p>
           </article>
           <article>
-            <h3>Demo Cue</h3>
+            <h3>Look For</h3>
             <p id="momentum-window-cue">-</p>
           </article>
         </div>
@@ -468,14 +468,14 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Benchmark Verdict</h2>
-            <p>Turn the compare-all snapshot into an explicit recommendation.</p>
+            <h2>Comparison results</h2>
+            <p>See which algorithm uses the fewest operations on this array. Change Rank by to compare a specific operation type.</p>
           </div>
           <p id="benchmark-verdict" class="comparison-summary">Run Compare All to see which sorter best fits this workload.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
-            <h3>Fastest</h3>
+            <h3>Fewest Operations</h3>
             <p id="benchmark-fastest">-</p>
           </article>
           <article>
@@ -495,7 +495,7 @@
             <p id="benchmark-selected-gap">-</p>
           </article>
           <article>
-            <h3>Coach Note</h3>
+            <h3>Keep In Mind</h3>
             <p id="benchmark-coach">-</p>
           </article>
         </div>
@@ -504,10 +504,10 @@
       <section class="diagnostics-panel" aria-live="polite">
         <div class="comparison-head">
           <div>
-            <h2>Benchmark Pressure</h2>
-            <p>Read whether the current picker is leading, chasing, or only useful as a teaching contrast.</p>
+            <h2>Your selection against the others</h2>
+            <p>Compare your selected algorithm with the one using the fewest operations.</p>
           </div>
-          <p id="benchmark-pressure-summary" class="comparison-summary">Run Compare All to measure how much pressure is on the current algorithm pick.</p>
+          <p id="benchmark-pressure-summary" class="comparison-summary">Run Compare All to check your selected algorithm.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -523,7 +523,7 @@
             <p id="benchmark-pressure-gap">-</p>
           </article>
           <article>
-            <h3>Demo Cue</h3>
+            <h3>Look For</h3>
             <p id="benchmark-pressure-cue">-</p>
           </article>
         </div>
@@ -560,16 +560,16 @@
               </tr>
             </thead>
             <tbody id="comparison-body">
-              <tr><td colspan="5" class="empty-row">Use Compare All to benchmark this input.</td></tr>
+              <tr><td colspan="5" class="empty-row">Click Compare All to see the counts for this array.</td></tr>
             </tbody>
           </table>
         </div>
         <div class="comparison-head comparison-history-head">
           <div>
-            <h2>Preset Gauntlet</h2>
-            <p>Benchmark the full sorter set against four workload families instead of a single one-off array.</p>
+            <h2>Six-preset comparison</h2>
+            <p>Run all eight algorithms on six different input patterns and compare their operation counts.</p>
           </div>
-          <p id="gauntlet-summary" class="comparison-summary">Run the gauntlet to see which algorithms keep winning across contrasting presets.</p>
+          <p id="gauntlet-summary" class="comparison-summary">Click Compare Six Presets to see how the results change with the input.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
@@ -585,24 +585,24 @@
             <p id="gauntlet-upset">-</p>
           </article>
           <article>
-            <h3>Operator Cue</h3>
+            <h3>Look For</h3>
             <p id="gauntlet-cue">-</p>
           </article>
         </div>
 
         <div class="comparison-head comparison-history-head">
           <div>
-            <h2>Saved Workload Shelf</h2>
-            <p>Keep a small local set of arrays worth re-running so the demo can return to a known contrast quickly.</p>
+            <h2>Saved arrays</h2>
+            <p>Save an array in this browser so you can run the same comparison again.</p>
           </div>
-          <p id="saved-workloads-summary" class="comparison-summary">Save the current array to build a reusable workload shelf.</p>
+          <p id="saved-workloads-summary" class="comparison-summary">Click Save Workload to keep the current array.</p>
         </div>
         <div id="saved-workloads-body" class="comparison-history-list"></div>
 
         <div class="comparison-head comparison-history-head">
           <div>
             <h2>Recent Compare-All Runs</h2>
-            <p>Keep a short local tape of benchmark snapshots so one workload can be contrasted against the next.</p>
+            <p>Compare the results from your recent arrays. This history stays in this browser.</p>
           </div>
           <p id="comparison-history-summary" class="comparison-summary">No benchmark history saved yet.</p>
         </div>
@@ -611,10 +611,10 @@
         <section class="diagnostics-panel" aria-live="polite">
           <div class="comparison-head">
             <div>
-              <h2>Benchmark Confidence</h2>
-              <p>Read whether the current winner is a one-off result or a repeatable story across saved workload snapshots.</p>
+              <h2>Results across saved runs</h2>
+              <p>Check how often the same algorithm has the lowest count in your saved comparisons.</p>
             </div>
-            <p id="benchmark-confidence-summary" class="comparison-summary">Run Compare All a few times to turn benchmark memory into confidence.</p>
+            <p id="benchmark-confidence-summary" class="comparison-summary">Compare several arrays to see whether the same algorithm keeps winning.</p>
           </div>
           <div class="diagnostics-grid">
             <article>
@@ -638,8 +638,8 @@
 
         <div class="comparison-head comparison-history-head">
           <div>
-            <h2>Stability Read</h2>
-            <p>Turn local benchmark memory into a quick read on whether the same winner keeps holding up.</p>
+            <h2>How often the winner changes</h2>
+            <p>See whether different arrays favor different algorithms. This measures result consistency, not sorting stability.</p>
           </div>
           <p id="stability-summary" class="comparison-summary">Run Compare All a few times to inspect winner consistency.</p>
         </div>
@@ -657,47 +657,47 @@
             <p id="stability-baseline">-</p>
           </article>
           <article>
-            <h3>Operator Cue</h3>
+            <h3>Look For</h3>
             <p id="stability-cue">-</p>
           </article>
         </div>
 
         <div class="comparison-head comparison-history-head">
           <div>
-            <h2>Contrast Planner</h2>
-            <p>Turn the latest benchmark and local winner history into the sharpest side-by-side story to show next.</p>
+            <h2>Two algorithms to compare</h2>
+            <p>Use the current results and saved runs to choose two algorithms worth stepping through.</p>
           </div>
           <p id="contrast-summary" class="comparison-summary">Run Compare All to pick an anchor sorter and its best contrast.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
-            <h3>Anchor Sorter</h3>
+            <h3>First algorithm to compare</h3>
             <p id="contrast-anchor">-</p>
           </article>
           <article>
-            <h3>Contrast Sorter</h3>
+            <h3>Compare it with</h3>
             <p id="contrast-opponent">-</p>
           </article>
           <article>
-            <h3>Story Angle</h3>
+            <h3>Difference To Watch</h3>
             <p id="contrast-angle">-</p>
           </article>
           <article>
-            <h3>History Cue</h3>
+            <h3>Earlier comparisons</h3>
             <p id="contrast-history">-</p>
           </article>
         </div>
 
         <div class="comparison-head comparison-history-head">
           <div>
-            <h2>Selected Algorithm Story</h2>
-            <p>Turn the currently selected sorter into a cleaner best-demo angle with one explicit watch-out.</p>
+            <h2>What to watch in your algorithm</h2>
+            <p>See what the selected algorithm handles well and where it does extra work.</p>
           </div>
-          <p id="selection-story-summary" class="comparison-summary">Run Compare All to turn the current algorithm into a portfolio-ready pitch.</p>
+          <p id="selection-story-summary" class="comparison-summary">Run Compare All to check the selected algorithm against the others.</p>
         </div>
         <div class="diagnostics-grid">
           <article>
-            <h3>Best Demo Angle</h3>
+            <h3>Useful Example</h3>
             <p id="selection-story-best">-</p>
           </article>
           <article>
@@ -705,7 +705,7 @@
             <p id="selection-story-risk">-</p>
           </article>
           <article>
-            <h3>History Cue</h3>
+            <h3>Earlier comparisons</h3>
             <p id="selection-story-history">-</p>
           </article>
         </div>
@@ -713,8 +713,8 @@
         <section class="diagnostics-panel" aria-live="polite">
           <div class="comparison-head">
             <div>
-              <h2>Selection Track Record</h2>
-              <p>Read how the currently selected sorter sits against the short local winner tape.</p>
+              <h2>Your algorithm across recent runs</h2>
+              <p>Check its latest rank and its wins in your saved comparisons.</p>
             </div>
             <p id="selection-track-summary" class="comparison-summary">Run Compare All a few times to build a track record for the current picker.</p>
           </div>
@@ -732,7 +732,7 @@
               <p id="selection-track-median">-</p>
             </article>
             <article>
-              <h3>Pitch Cue</h3>
+              <h3>Look For</h3>
               <p id="selection-track-cue">-</p>
             </article>
           </div>
@@ -742,25 +742,25 @@
           <div class="comparison-head">
             <div>
               <h2>Complexity Reality Check</h2>
-              <p>Compare the textbook complexity story against the operation stream this exact workload generated.</p>
+              <p>Compare a rough estimate from the complexity formula with the recorded operations for this array.</p>
             </div>
             <p id="complexity-reality-summary" class="comparison-summary">Generate a run to compare theory with observed operation cost.</p>
           </div>
           <div class="diagnostics-grid">
             <article>
-              <h3>Theory Posture</h3>
+              <h3>Complexity Estimate</h3>
               <p id="complexity-reality-theory">-</p>
             </article>
             <article>
-              <h3>Observed Load</h3>
+              <h3>Recorded Operations</h3>
               <p id="complexity-reality-actual">-</p>
             </article>
             <article>
-              <h3>Fit Read</h3>
+              <h3>Comparison</h3>
               <p id="complexity-reality-fit">-</p>
             </article>
             <article>
-              <h3>Pitch Cue</h3>
+              <h3>Keep In Mind</h3>
               <p id="complexity-reality-cue">-</p>
             </article>
           </div>

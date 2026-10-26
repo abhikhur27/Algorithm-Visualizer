@@ -167,7 +167,7 @@ const algorithmNotes = {
   insertion: 'Insertion Sort builds a sorted prefix and inserts each next value at the correct position. Worst-case: O(n^2).',
   counting: 'Counting Sort counts each integer key in a bounded range, then rebuilds the array in order. This build supports signed integers by offsetting the minimum value.',
   merge: 'Merge Sort recursively splits and merges ranges. Time complexity: O(n log n), extra memory required.',
-  shell: 'Shell Sort performs gapped insertion passes, making nearly sorted arrays converge much faster than plain insertion sort.',
+  shell: 'Shell Sort first moves values across gaps, then reduces those gaps until it finishes with an insertion-sort pass.',
   heap: 'Heap Sort repeatedly extracts the max element from a binary heap. Time complexity: O(n log n), in-place.',
   quick: 'Quick Sort partitions around a pivot. Average complexity: O(n log n), worst-case O(n^2).',
   radix: 'Radix Sort groups values by digit from least-significant to most-significant place. This build offsets signed integers so negative workloads stay sortable too.',
@@ -422,12 +422,12 @@ function renderSavedWorkloads() {
   if (!savedWorkloadsBody || !savedWorkloadsSummary) return;
 
   if (!savedWorkloads.length) {
-    savedWorkloadsSummary.textContent = 'Save the current array to build a reusable workload shelf.';
+    savedWorkloadsSummary.textContent = 'Click Save Workload to keep this array in this browser.';
     savedWorkloadsBody.innerHTML = '';
     return;
   }
 
-  savedWorkloadsSummary.textContent = `${savedWorkloads.length} saved workload${savedWorkloads.length === 1 ? '' : 's'} ready for repeatable benchmark passes.`;
+  savedWorkloadsSummary.textContent = `${savedWorkloads.length} saved workload${savedWorkloads.length === 1 ? '' : 's'} saved in this browser.`;
   savedWorkloadsBody.innerHTML = savedWorkloads
     .map(
       (entry, index) => `
@@ -549,7 +549,7 @@ function updateSelectionVerdict(metrics = null, rows = lastComparisonRows) {
   }
 
   if (!baseArray.length) {
-    selectionVerdictSummaryEl.textContent = 'Generate an array to score the current picker.';
+    selectionVerdictSummaryEl.textContent = 'Load an array to check the selected algorithm.';
     selectionVerdictBestEl.textContent = '-';
     selectionVerdictFallbackEl.textContent = '-';
     selectionVerdictWatchEl.textContent = '-';
@@ -570,22 +570,22 @@ function updateSelectionVerdict(metrics = null, rows = lastComparisonRows) {
   const fallback = winner?.label || matchupBaselineEl?.textContent || 'Merge Sort';
   const watch = matchupRiskEl?.textContent || diagnosticRecommendationEl?.textContent || 'Inspect the workload shape first.';
 
-  let summary = `${selectedLabel} is a reasonable teaching baseline on this workload.`;
+  let summary = `${selectedLabel} can be compared with the other algorithms on this array.`;
   if (selectedRow && winner) {
     summary =
       selectedRow.key === winner.key
         ? `${selectedLabel} currently wins the benchmark table for this workload.`
         : `${selectedLabel} loses to ${winner.label} here, so demo it as a contrast rather than the headline performer.`;
   } else if (resolvedMetrics.sortedness >= 72 && selected === 'insertion') {
-    summary = 'Insertion Sort is the best storytelling pick because the array is already mostly ordered.';
+    summary = 'Insertion Sort is worth trying because this array is already mostly ordered.';
   } else if ((metrics?.rangeWidth ?? computeArrayInsights(baseArray).rangeWidth) <= Math.max(24, baseArray.length * 2) && selected === 'counting') {
-    summary = 'Counting Sort has a strong story here because the workload stays inside a compact signed integer range.';
+    summary = 'Counting Sort is worth trying because the integers fall within a small range.';
   } else if (resolvedMetrics.duplicateRate >= 40 && selected === 'radix') {
-    summary = 'Radix Sort has a strong story here because the input is duplicate-heavy and digit-friendly.';
+    summary = 'Try Radix Sort here and compare its digit passes with the other algorithms.';
   } else if (resolvedMetrics.inversionRatio >= 0.58 && ['heap', 'quick'].includes(selected)) {
-    summary = `${selectedLabel} fits the disorder profile well enough to anchor the demo.`;
+    summary = `${selectedLabel} is worth comparing on this mostly unordered array.`;
   } else if (selected === 'bubble') {
-    summary = 'Bubble Sort is best used here as a visual baseline, not the main performance claim.';
+    summary = 'Bubble Sort makes pairwise swaps easy to follow. Compare its count with the other algorithms.';
   }
 
   selectionVerdictSummaryEl.textContent = summary;
@@ -600,7 +600,7 @@ function updateExperimentCoach(metrics = null) {
   }
 
   if (!baseArray.length) {
-    experimentCoachSummaryEl.textContent = 'Generate an array to stage the next contrast test.';
+    experimentCoachSummaryEl.textContent = 'Load an array to get another input to try.';
     experimentCoachBestEl.textContent = '-';
     experimentCoachContrastEl.textContent = '-';
     experimentCoachAngleEl.textContent = '-';
@@ -614,46 +614,46 @@ function updateExperimentCoach(metrics = null) {
   const spread = metrics?.spread ?? Math.max(...baseArray) - Math.min(...baseArray);
 
   const coach = {
-    summary: 'Use the current array as a baseline, then run one preset contrast so the algorithm tradeoff becomes legible.',
+    summary: 'Run this array, then try a preset with the same algorithm and compare the counts.',
     best: 'Nearly Sorted preset',
     contrast: 'Reversed preset',
-    angle: 'Compare a friendly input against a hostile one with the same sorter selected.',
-    watch: 'Use Compare All after each run so the contrast is anchored in operation counts, not just animation feel.',
+    angle: 'Compare Nearly Sorted with Reversed using the same algorithm.',
+    watch: 'Use Compare All after each run to check the operation counts.',
   };
 
   if (selected === 'bubble' || selected === 'insertion') {
     coach.best = sortedness >= 70 ? 'Keep this workload or reload Nearly Sorted.' : 'Nearly Sorted preset';
     coach.contrast = 'Reversed preset';
-    coach.angle = 'Frame the selected sorter as an input-shape specialist rather than a generic winner.';
-    coach.watch = 'Narrate how quickly the best case collapses once local order disappears.';
+    coach.angle = 'Compare how the algorithm handles an ordered array and a reversed one.';
+    coach.watch = 'Watch how many extra comparisons and writes the reversed array needs.';
   } else if (selected === 'shell') {
     coach.best = sortedness >= 50 ? 'Nearly Sorted preset' : 'Current workload';
     coach.contrast = 'Reversed preset';
-    coach.angle = 'Show Shell Sort as the in-place bridge between insertion-style locality and heavier sorters.';
-    coach.watch = 'Use the write count to show whether the gap passes are actually reducing churn.';
+    coach.angle = 'Watch how Shell Sort moves values across gaps before sorting nearby values.';
+    coach.watch = 'Compare the write counts with Insertion Sort on the same array.';
   } else if (selected === 'counting') {
     coach.best = 'Few Unique preset';
     coach.contrast = 'Randomize, then switch to Merge Sort or Quick Sort.';
-    coach.angle = 'Treat Counting Sort as a compact-range specialist that can beat comparison-based baselines when the keys stay bounded.';
-    coach.watch = 'Point out that the win depends on range width, not just duplicate rate.';
+    coach.angle = 'Try Counting Sort when the integers fall within a small range.';
+    coach.watch = 'Check the range between the smallest and largest values, as well as the duplicate count.';
   } else if (selected === 'merge' || selected === 'heap' || selected === 'quick') {
     coach.best = spread <= 35 ? 'Randomize for a wider spread.' : 'Current workload is already a fair benchmark.';
     coach.contrast = 'Few Unique preset';
-    coach.angle = 'Use duplicate-heavy data to show whether fast also means well behaved for this sorter.';
-    coach.watch = 'Call out whether the selected algorithm wins on total work or simply avoids the worst-case blow-up.';
+    coach.angle = 'Try repeated values and check how the comparison and write counts change.';
+    coach.watch = 'Compare the total count, then look at comparisons and writes separately.';
   } else if (selected === 'radix') {
     coach.best = 'Few Unique preset';
     coach.contrast = 'Randomize, then switch to Quick Sort or Merge Sort.';
-    coach.angle = 'Frame Radix Sort as a data-domain specialist, not a universal replacement.';
-    coach.watch = 'Mention that its advantage depends on bounded integer ranges; this build now handles signed values by offsetting them before digit passes.';
+    coach.angle = 'Try Radix Sort with whole numbers and compare its digit passes with Quick Sort.';
+    coach.watch = 'This version shifts negative integers before sorting digits, then shifts them back.';
   }
 
   if (duplicateRate >= 35) {
-    coach.summary = 'This workload is duplicate-heavy, so the best demo is a stability-flavored contrast rather than a pure speed race.';
+    coach.summary = 'Many values repeat here. Compare how the algorithms handle equal values.';
   } else if (sortedness >= 75) {
-    coach.summary = 'This workload is already close to sorted, which makes it ideal for explaining why input shape matters as much as asymptotic complexity.';
+    coach.summary = 'This array is nearly sorted. Try Reversed next and compare the work the same algorithm does.';
   } else if (spread <= 24) {
-    coach.summary = 'The value band is tight, so this is a good spot to discuss when the data domain changes the right algorithm pick.';
+    coach.summary = 'The numbers are close together. Try Counting Sort and compare its operation count.';
   }
 
   experimentCoachSummaryEl.textContent = coach.summary;
@@ -700,7 +700,7 @@ function updateWorkloadMatchup(metrics) {
   let bestFit = 'Quick Sort';
   let baseline = 'Merge Sort';
   let risk = 'Bubble Sort';
-  let selectedRead = `${selectedLabel} reads like a neutral baseline on this workload.`;
+  let selectedRead = `${selectedLabel} is one option to compare on this array.`;
   let summary = 'This array looks general-purpose, so compare a fast partition-based sort against a stable merge baseline.';
 
   if ((metrics.sortedness ?? 0) >= 82) {
@@ -729,12 +729,12 @@ function updateWorkloadMatchup(metrics) {
     selectedRead =
       (metrics.sortedness ?? 0) >= 82
         ? 'Insertion Sort is aligned with the current order bias and should stay competitive.'
-        : 'Insertion Sort is playable here, but it needs stronger existing order to become the best fit.';
+        : 'Try Insertion Sort, then compare its count with a Nearly Sorted array.';
   } else if (algorithmSelect.value === 'counting') {
     selectedRead =
       (metrics.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2)
-        ? 'Counting Sort is aligned with the compact key range and should be treated as a serious bounded-domain contender.'
-        : 'Counting Sort works, but the key range is wide enough that comparison-based baselines may tell the cleaner story.';
+        ? 'Counting Sort is worth testing because the integers fall within a small range.'
+        : 'The wide integer range can add work for Counting Sort. Compare it with Merge Sort.';
   } else if (algorithmSelect.value === 'merge') {
     selectedRead =
       (metrics.duplicateRate ?? 0) >= 35
@@ -744,12 +744,12 @@ function updateWorkloadMatchup(metrics) {
     selectedRead =
       (metrics.inversionRatio ?? 0) >= 0.72
         ? 'Heap Sort matches the current disorder-heavy profile and gives a dependable worst-case baseline.'
-        : 'Heap Sort is robust here, but the workload does not clearly require its worst-case posture.';
+        : 'Heap Sort works here. Compare its count with Quick Sort and Merge Sort.';
   } else if (algorithmSelect.value === 'quick') {
     selectedRead =
       (metrics.duplicateRate ?? 0) >= 35
         ? 'Quick Sort is the main risk pick here because duplicate-heavy inputs can produce noisy partition costs.'
-        : 'Quick Sort still reads like the fast default when the array has no strong structural bias.';
+        : 'Try Quick Sort as a starting point, then check its operation count.';
   } else if (algorithmSelect.value === 'radix') {
     selectedRead =
       (metrics.duplicateRate ?? 0) >= 20
@@ -778,20 +778,20 @@ function pickBestFitAlgorithm(metrics = computeArrayInsights(baseArray)) {
   }
 
   let nextAlgorithm = 'quick';
-  let reason = 'general-purpose disorder with no strong structural bias.';
+  let reason = 'the array has no clear pattern.';
 
   if ((metrics.sortedness ?? 0) >= 82) {
     nextAlgorithm = 'insertion';
     reason = 'the array is already close to sorted.';
   } else if ((metrics.allIntegers ?? true) && (metrics.rangeWidth ?? Number.POSITIVE_INFINITY) <= Math.max(24, baseArray.length * 2) && (metrics.duplicateRate ?? 0) >= 18) {
     nextAlgorithm = 'counting';
-    reason = 'the array stays inside a compact integer range, so counting buckets are a credible first-pass fit.';
+    reason = 'the integers fall within a small range.';
   } else if ((metrics.duplicateRate ?? 0) >= 35) {
     nextAlgorithm = 'merge';
     reason = 'duplicate-heavy inputs reward a stable baseline.';
   } else if ((metrics.inversionRatio ?? 0) >= 0.72) {
     nextAlgorithm = 'heap';
-    reason = 'disorder is high enough that a worst-case-safe n log n baseline is the cleanest teaching pick.';
+    reason = 'the array is mostly unordered, so Heap Sort is worth comparing.';
   } else if ((metrics.duplicateRate ?? 0) >= 20 && (metrics.spread ?? Number.POSITIVE_INFINITY) <= 24) {
     nextAlgorithm = 'radix';
     reason = 'bounded repeated integers make digit passes plausible.';
@@ -908,7 +908,7 @@ function stepShare(count, total) {
 
 function describeStep(step, index) {
   if (!step) {
-    if (!steps.length) return 'Generate an array to inspect the upcoming operation flow.';
+    if (!steps.length) return 'Load an array to see the next operation.';
     if (index >= steps.length) return 'Replay complete. The array is now sorted.';
     return 'Ready to start replay.';
   }
@@ -973,7 +973,7 @@ function updateMomentumWindow(summary = summarizeOperations(steps)) {
   }
 
   if (!summary.total) {
-    momentumWindowSummaryEl.textContent = 'Generate a run to inspect where the replay actually spends its effort.';
+    momentumWindowSummaryEl.textContent = 'Start a run to compare its beginning, middle, and end.';
     momentumWindowOpeningEl.textContent = '-';
     momentumWindowMiddleEl.textContent = '-';
     momentumWindowClosingEl.textContent = '-';
@@ -995,10 +995,10 @@ function updateMomentumWindow(summary = summarizeOperations(steps)) {
     return best;
   }, null);
   const pacingCue = summary.comparisons >= summary.swaps && summary.comparisons >= summary.writes
-    ? `Narrate the ${densestWindow.label.toLowerCase()} scan pressure first, then jump to the few decisive commits.`
-    : `Scrub quickly through the ${densestWindow.label.toLowerCase()} window because that is where the replay's visible work actually lands.`;
+    ? `Look at the comparisons in the ${densestWindow.label.toLowerCase()} section, then step to the next swap or write.`
+    : `Use the step slider to inspect the changes in the ${densestWindow.label.toLowerCase()} section.`;
 
-  momentumWindowSummaryEl.textContent = `The replay spreads ${summary.total} operations across three windows so you can tell whether the algorithm spends its story budget early, midstream, or only at the finish.`;
+  momentumWindowSummaryEl.textContent = `The ${summary.total} steps are split into three sections so you can compare the operation types at the start, middle, and end.`;
   momentumWindowOpeningEl.textContent = describeMomentumSlice(opening, 'Opening');
   momentumWindowMiddleEl.textContent = describeMomentumSlice(middle, 'Middle');
   momentumWindowClosingEl.textContent = describeMomentumSlice(closing, 'Closing');
@@ -1044,18 +1044,18 @@ function renderComplexityRealityCheck(summary = summarizeOperations(steps)) {
   const ratio = actual / Math.max(1, baseline);
   const fitRead =
     ratio <= 0.75
-      ? 'Better than the coarse theory baseline on this workload.'
+      ? 'Fewer recorded steps than the rough estimate.'
       : ratio <= 1.35
-        ? 'Roughly aligned with the expected complexity posture.'
-        : 'Heavier than the coarse theory baseline on this workload.';
+        ? 'Close to the rough estimate.'
+        : 'More recorded steps than the rough estimate.';
   const cue =
     ['bubble', 'insertion'].includes(algorithmSelect.value)
       ? ratio <= 0.8
-        ? 'The input is structured enough that the usual quadratic warning softened in practice.'
-        : 'This is a good reminder that simple quadratic sorters stop feeling cute once the array stops cooperating.'
+        ? 'This array takes fewer steps than n squared; the quadratic bound still describes the worst-case growth.'
+        : 'Bubble and Insertion Sort can do much more work as the array grows or becomes less ordered.'
       : ratio >= 1.35
-        ? 'Use this run to explain that asymptotic families still hide workload-specific overhead, partition churn, or rebuild cost.'
-        : 'The replay is matching the textbook story closely enough that you can teach theory and observed cost together.';
+        ? 'Complexity describes growth with input size. The exact count also depends on the input and the operations recorded.'
+        : 'The recorded count is close to this rough estimate for the current array size.';
 
   complexityRealitySummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} generated ${actual} replay steps against a coarse ${theoryLabel} baseline.`;
   complexityRealityTheoryEl.textContent = theoryLabel;
@@ -1070,7 +1070,7 @@ function updateVolatilityBoard(summary = summarizeOperations(steps)) {
   }
 
   if (!summary.total) {
-    volatilitySummaryEl.textContent = 'Generate a run to inspect its burstiness and pacing shifts.';
+    volatilitySummaryEl.textContent = 'Start a run to see how its steps are grouped.';
     volatilityCompareRunEl.textContent = '-';
     volatilityWriteRunEl.textContent = '-';
     volatilityTurningPointEl.textContent = '-';
@@ -1104,9 +1104,9 @@ function updateVolatilityBoard(summary = summarizeOperations(steps)) {
   const turningPointStep = steps[turningPointIndex];
   const posture =
     longestWriteRun >= 6
-      ? 'back-loaded rebuild'
+      ? 'consecutive writes'
       : longestCompareRun >= 10
-        ? 'scan-heavy churn'
+        ? 'long comparison runs'
         : 'fairly even pacing';
 
   volatilitySummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} shows ${posture} on this workload.`;
@@ -1115,10 +1115,10 @@ function updateVolatilityBoard(summary = summarizeOperations(steps)) {
   volatilityTurningPointEl.textContent = `Step ${turningPointIndex + 1}: ${describeStep(turningPointStep, turningPointIndex)}`;
   volatilityCueEl.textContent =
     longestWriteRun >= 6
-      ? 'Skip to the write burst if the goal is to show when the algorithm finally cashes in its earlier comparisons.'
+      ? 'Jump to the consecutive writes to see values being placed back into the array.'
       : longestCompareRun >= 10
-        ? 'Narrate the long compare run as proof that this algorithm spends time scouting before it commits to movement.'
-        : 'This run is balanced enough that a straight replay will not feel like dead air.';
+        ? 'Watch the long stretch of comparisons, then step to the next swap or write.'
+        : 'Play the run through to see its mix of comparisons and changes.';
 }
 
 function updateOperationPosture(summary = summarizeOperations(steps)) {
@@ -1133,7 +1133,7 @@ function updateOperationPosture(summary = summarizeOperations(steps)) {
   }
 
   if (!summary.total) {
-    operationPostureSummaryEl.textContent = 'Generate a run to classify its operation posture.';
+    operationPostureSummaryEl.textContent = 'Start a run to compare its operation types.';
     operationPostureDominantEl.textContent = '-';
     operationPostureRhythmEl.textContent = '-';
     operationPostureAngleEl.textContent = '-';
@@ -1146,21 +1146,21 @@ function updateOperationPosture(summary = summarizeOperations(steps)) {
   const writeShare = summary.writes / Math.max(1, summary.total);
 
   let posture = 'balanced';
-  let angle = 'This run is balanced enough that you can teach both search and commitment without forcing one story.';
-  let watch = 'Do not over-narrate one metric; this replay is interesting because several operation types stay in play.';
+  let angle = 'This run mixes comparisons with swaps and writes.';
+  let watch = 'Watch how comparisons lead to swaps or writes.';
 
   if (compareShare >= 0.58) {
-    posture = 'scout-heavy';
-    angle = 'Frame the replay around reconnaissance: the algorithm spends most of its time learning local order before it commits.';
-    watch = 'If you play every compare step straight through, the audience may miss the eventual payoff. Jump to the first decisive swap or overwrite.';
+    posture = 'comparison-heavy';
+    angle = 'Most steps compare values. Look for the swaps or writes that follow those comparisons.';
+    watch = 'Step past a series of comparisons to see which value moves next.';
   } else if (writeShare >= 0.34) {
     posture = 'rebuild-heavy';
-    angle = 'Frame the replay around reconstruction: the algorithm earns its clarity when sorted structure gets written back into place.';
-    watch = 'Do not pitch this like a pure swap race. The visual story lives in rebuild bursts and landing zones.';
+    angle = 'Watch the writes that place values back into the array.';
+    watch = 'Compare writes separately from swaps; the algorithms move values in different ways.';
   } else if (swapShare >= 0.18) {
     posture = 'exchange-heavy';
-    angle = 'Frame the replay around direct corrections: this sorter keeps paying down local disorder through visible exchanges.';
-    watch = 'Use a scrambled workload. Cleaner arrays can make the swap story feel weaker than it really is.';
+    angle = 'Watch pairs of values change places as the algorithm sorts the array.';
+    watch = 'Try Reversed to compare the number of swaps with a nearly sorted array.';
   }
 
   let longestNonCompareRun = 0;
@@ -1172,12 +1172,12 @@ function updateOperationPosture(summary = summarizeOperations(steps)) {
 
   const rhythm =
     longestNonCompareRun >= 8
-      ? 'bursty commits'
+      ? 'long runs of swaps or writes'
       : longestNonCompareRun >= 4
-        ? 'short commitment bursts'
-        : 'frequent small commits';
+        ? 'short runs of swaps or writes'
+        : 'frequent individual changes';
 
-  operationPostureSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} reads as ${posture} with ${rhythm} on this workload.`;
+  operationPostureSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Current algorithm'} is ${posture}, with ${rhythm} on this array.`;
   operationPostureDominantEl.textContent =
     compareShare >= writeShare && compareShare >= swapShare
       ? `Comparisons (${stepShare(summary.comparisons, summary.total)})`
@@ -1195,7 +1195,7 @@ function updateReplayBudget(summary = summarizeOperations(steps)) {
   }
 
   if (!summary.total) {
-    replayBudgetSummaryEl.textContent = 'Generate a run to estimate its playback budget.';
+    replayBudgetSummaryEl.textContent = 'Start a run to estimate its playback time.';
     replayBudgetRuntimeEl.textContent = '-';
     replayBudgetPaceEl.textContent = '-';
     replayBudgetDensityEl.textContent = '-';
@@ -1215,15 +1215,15 @@ function updateReplayBudget(summary = summarizeOperations(steps)) {
         : 'Dense';
   const cue =
     runtimeSeconds <= 12
-      ? 'This replay is compact enough to run straight through in a live walkthrough.'
+      ? 'This run is short enough to watch from start to finish.'
       : runtimeSeconds <= 24
-        ? 'Use the teaching cut or scrubber so the demo lands on the turning points instead of narrating every operation.'
-        : 'This run is too long for raw playback; benchmark it first, then scrub only the checkpoints that prove the algorithm story.';
+        ? 'Use the checkpoints or step slider to jump to a particular part of the run.'
+        : 'This animation is long at the selected speed. Increase the speed or use the step slider.';
 
   replayBudgetSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex]?.textContent || 'Current algorithm'} would take about ${runtimeSeconds.toFixed(1)}s to replay at the current speed.`;
   replayBudgetRuntimeEl.textContent = `${runtimeSeconds.toFixed(1)}s`;
   replayBudgetPaceEl.textContent = `${opsPerSecond.toFixed(1)} ops/s`;
-  replayBudgetDensityEl.textContent = `${density} | ~${checkpoints} teaching beats`;
+  replayBudgetDensityEl.textContent = `${density} | ~${checkpoints} steps between checkpoints`;
   replayBudgetCueEl.textContent = cue;
 }
 
@@ -1231,7 +1231,7 @@ function updateTeachingCut(summary) {
   if (!teachingCutSummaryEl || !teachingCutListEl) return;
 
   if (!steps.length) {
-    teachingCutSummaryEl.textContent = 'Generate steps to get a compact narration path.';
+    teachingCutSummaryEl.textContent = 'Start a run to see its checkpoints.';
     teachingCutListEl.innerHTML = '';
     return;
   }
@@ -1244,7 +1244,7 @@ function updateTeachingCut(summary) {
       ? 'swap-heavy'
       : 'comparison-heavy';
 
-  teachingCutSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex].text} is ${dominant} on this input; narrate these checkpoints instead of every operation.`;
+  teachingCutSummaryEl.textContent = `${algorithmSelect.options[algorithmSelect.selectedIndex].text} is ${dominant} on this input. These checkpoints show individual steps along the way.`;
   teachingCutListEl.innerHTML = selectedIndexes
     .map((index) => `<li><strong>Step ${index + 1}</strong>: ${describeStep(steps[index], index)}</li>`)
     .join('');
@@ -1643,7 +1643,7 @@ function renderComparisonHistory() {
   if (!comparisonHistorySummary || !comparisonHistoryBody) return;
   if (!comparisonHistory.length) {
     comparisonHistorySummary.textContent = 'No benchmark history saved yet.';
-    comparisonHistoryBody.innerHTML = '<article class="comparison-history-item"><strong>Waiting for a compare-all run.</strong><p>Benchmark a workload to keep a reusable before/after snapshot for future demos.</p></article>';
+    comparisonHistoryBody.innerHTML = '<article class="comparison-history-item"><strong>Waiting for a comparison.</strong><p>Run Compare All to save the results for this array.</p></article>';
     renderStabilityRead();
     renderBenchmarkConfidence();
     return;
@@ -1669,7 +1669,7 @@ function renderBenchmarkConfidence() {
   }
 
   if (!comparisonHistory.length) {
-    benchmarkConfidenceSummaryEl.textContent = 'Run Compare All a few times to turn benchmark memory into confidence.';
+    benchmarkConfidenceSummaryEl.textContent = 'Compare several arrays to see whether the same algorithm keeps winning.';
     benchmarkConfidenceEvidenceEl.textContent = '-';
     benchmarkConfidenceChurnEl.textContent = '-';
     benchmarkConfidenceAnchorEl.textContent = '-';
@@ -1689,14 +1689,14 @@ function renderBenchmarkConfidence() {
   benchmarkConfidenceSummaryEl.textContent =
     uniqueWinners.length === 1
       ? `${anchor} has been repeatable across every saved snapshot so far.`
-      : `${anchor} is the strongest recurring winner, but workload sensitivity is still part of the story.`;
+      : `${anchor} has the most saved wins. Other arrays have favored different algorithms.`;
   benchmarkConfidenceEvidenceEl.textContent = `${comparisonHistory.length} saved snapshot${comparisonHistory.length === 1 ? '' : 's'}`;
   benchmarkConfidenceChurnEl.textContent = `${uniqueWinners.length} winner${uniqueWinners.length === 1 ? '' : 's'} | churn ${(churn * 100).toFixed(0)}%`;
   benchmarkConfidenceAnchorEl.textContent = `${anchor} (${counts[anchor]} win${counts[anchor] === 1 ? '' : 's'})`;
   benchmarkConfidenceCueEl.textContent =
     comparisonHistory.length >= 4 && uniqueWinners.length <= 2
-      ? 'You have enough repeated evidence to pitch a preferred sorter plus one boundary case.'
-      : 'Treat the latest winner as workload-specific until more saved contrasts stabilize the story.';
+      ? 'Compare the most frequent winner with an array where another algorithm won.'
+      : 'These results describe your saved arrays. Try more input patterns before generalizing.';
 }
 
 function saveCurrentWorkload() {
@@ -1839,11 +1839,11 @@ function renderStabilityRead() {
   stabilityBaselineEl.textContent = `${repeatableBaseline} (${winnerCounts[repeatableBaseline]} wins)`;
 
   if (uniqueWinners.length === 1) {
-    stabilityCueEl.textContent = 'This workload family is behaving consistently, so the same winner is a credible demo anchor.';
+    stabilityCueEl.textContent = 'The same algorithm has the lowest count across these saved runs.';
   } else if (streak >= 2) {
-    stabilityCueEl.textContent = 'The latest winner is building a streak, so contrast it against one earlier upset to show where the boundary moves.';
+    stabilityCueEl.textContent = 'The latest winner has won several runs. Try an earlier array where a different algorithm won.';
   } else {
-    stabilityCueEl.textContent = 'Winner churn is high, so frame this tool around input-shape sensitivity rather than a universal best sorter.';
+    stabilityCueEl.textContent = 'Different arrays favor different algorithms in these saved runs.';
   }
 }
 
@@ -1851,7 +1851,7 @@ function renderContrastPlanner(rows = lastComparisonRows) {
   if (!contrastSummaryEl || !contrastAnchorEl || !contrastOpponentEl || !contrastAngleEl || !contrastHistoryEl) return;
 
   if (!rows.length) {
-    contrastSummaryEl.textContent = 'Run Compare All to pick an anchor sorter and its best contrast.';
+    contrastSummaryEl.textContent = 'Run Compare All to choose two algorithms to step through.';
     contrastAnchorEl.textContent = '-';
     contrastOpponentEl.textContent = '-';
     contrastAngleEl.textContent = '-';
@@ -1871,23 +1871,23 @@ function renderContrastPlanner(rows = lastComparisonRows) {
   }, {});
   const leaderHistory = winnerCounts[leader.label] || 0;
 
-  contrastSummaryEl.textContent = `${leader.label} is the anchor; ${contrast.label} gives the clearest contrast on this workload.`;
+  contrastSummaryEl.textContent = `Try stepping through ${leader.label} and ${contrast.label} on this array.`;
   contrastAnchorEl.textContent = `${leader.label} (${leader.total} ops)`;
   contrastOpponentEl.textContent = `${contrast.label} (${contrast.total} ops)`;
   contrastAngleEl.textContent = closeRace
-    ? `${runnerUp.label} stayed within ${gapToRunnerUp} ops, so this is a specialist-vs-specialist comparison.`
-    : `${contrast.label} trails by ${Math.max(0, contrast.total - leader.total)} ops, which makes the workload fit boundary obvious fast.`;
+    ? `${runnerUp.label} uses ${gapToRunnerUp} more operations. Look at how the two algorithms move values differently.`
+    : `${contrast.label} uses ${Math.max(0, contrast.total - leader.total)} more operations. Step through both to see where the difference comes from.`;
   contrastHistoryEl.textContent =
     leaderHistory >= 2
-      ? `${leader.label} has already won ${leaderHistory} recent snapshot${leaderHistory === 1 ? '' : 's'}, so the anchor looks repeatable.`
-      : 'Winner history is still mixed, so this run is best framed as one workload-specific read rather than a universal rule.';
+      ? `${leader.label} has the lowest count in ${leaderHistory} saved run${leaderHistory === 1 ? '' : 's'}.`
+      : 'These results describe this array. Try different inputs before choosing an algorithm for another task.';
 }
 
 function renderSelectionStory(rows = lastComparisonRows) {
   if (!selectionStorySummaryEl || !selectionStoryBestEl || !selectionStoryRiskEl || !selectionStoryHistoryEl) return;
 
   if (!rows.length) {
-    selectionStorySummaryEl.textContent = 'Run Compare All to turn the current algorithm into a portfolio-ready pitch.';
+    selectionStorySummaryEl.textContent = 'Run Compare All to check the selected algorithm against the others.';
     selectionStoryBestEl.textContent = '-';
     selectionStoryRiskEl.textContent = '-';
     selectionStoryHistoryEl.textContent = '-';
@@ -1902,26 +1902,26 @@ function renderSelectionStory(rows = lastComparisonRows) {
   const selectedWins = comparisonHistory.filter((entry) => entry.best === selected.label).length;
 
   if (selected.key === leader.key) {
-    selectionStorySummaryEl.textContent = `${selected.label} is the current winner, so the pitch can lead with workload fit instead of apologizing for overhead.`;
-    selectionStoryBestEl.textContent = `Use this array as the showcase case: ${selected.label} leads by ${Math.max(0, rows[1]?.total - selected.total || 0)} ops.`;
+    selectionStorySummaryEl.textContent = `${selected.label} has the lowest total operation count on this array.`;
+    selectionStoryBestEl.textContent = `${selected.label} uses ${Math.max(0, rows[1]?.total - selected.total || 0)} fewer operations than the next algorithm.`;
   } else {
-    selectionStorySummaryEl.textContent = `${selected.label} ranks #${selectedRank} on this workload, so the pitch should frame it as a deliberate tradeoff rather than a universal best pick.`;
+    selectionStorySummaryEl.textContent = `${selected.label} ranks #${selectedRank} by total operations on this array.`;
     selectionStoryBestEl.textContent = gapToLeader <= Math.max(12, leader.total * 0.12)
-      ? `It stays close to ${leader.label}, which makes it defensible when its behavior is easier to teach.`
-      : `Use it when the lesson is ${algorithmProfiles[selected.key]?.sweetSpot || 'its algorithmic behavior'}, not pure operation count.`;
+      ? `Its count is close to ${leader.label}. Step through both to compare their operations.`
+      : `Useful for: ${algorithmProfiles[selected.key]?.sweetSpot || 'following each sorting step.'}`;
   }
 
   selectionStoryRiskEl.textContent =
     selected.key === worst.key
-      ? `${selected.label} is the heaviest current choice, so contrast it directly against ${leader.label} to make the mismatch visible fast.`
-      : `${worst.label} is the real misfit here; keep the watch-out focused on when ${selected.label} would drift toward that same failure mode.`;
+      ? `${selected.label} uses the most operations here. Compare its steps with ${leader.label}.`
+      : `${worst.label} uses the most operations on this array. Compare the counts before trying a different input.`;
 
   selectionStoryHistoryEl.textContent =
     selectedWins >= 2
-      ? `${selected.label} has already won ${selectedWins} saved workload snapshots, so it has repeatable demo value.`
+      ? `${selected.label} has the lowest count in ${selectedWins} saved comparisons.`
       : selectedWins === 1
-        ? `${selected.label} has one recent win in saved history, so it already has at least one credible showcase workload.`
-        : `${selected.label} has not won recent saved snapshots yet, so keep the narrative workload-specific and contrast-driven.`;
+        ? `${selected.label} has the lowest count in one saved comparison.`
+        : `${selected.label} has not had the lowest count in your saved comparisons yet.`;
 }
 
 function renderSelectionTrackRecord(rows = lastComparisonRows) {
@@ -1930,7 +1930,7 @@ function renderSelectionTrackRecord(rows = lastComparisonRows) {
   }
 
   if (!rows.length) {
-    selectionTrackSummaryEl.textContent = 'Run Compare All a few times to build a track record for the current picker.';
+    selectionTrackSummaryEl.textContent = 'Compare several arrays to see recent results for this algorithm.';
     selectionTrackFinishesEl.textContent = '-';
     selectionTrackBestEl.textContent = '-';
     selectionTrackMedianEl.textContent = '-';
@@ -1945,14 +1945,14 @@ function renderSelectionTrackRecord(rows = lastComparisonRows) {
   const leaderWins = comparisonHistory.filter((entry) => entry.best === leader.label).length;
   const gapToLeader = selected.total - leader.total;
 
-  selectionTrackSummaryEl.textContent = `${selected.label} is currently ranking #${selectedRank} with ${comparisonHistory.length} saved compare-all snapshot${comparisonHistory.length === 1 ? '' : 's'} on the local tape.`;
+  selectionTrackSummaryEl.textContent = `${selected.label} ranks #${selectedRank} on this array. You have ${comparisonHistory.length} comparison${comparisonHistory.length === 1 ? '' : 's'} saved in this browser.`;
   selectionTrackFinishesEl.textContent = selectedRank === 1 ? 'Current finish: winner on this workload.' : `Current finish: #${selectedRank}, ${gapToLeader} operations behind ${leader.label}.`;
   selectionTrackBestEl.textContent = selectedWins ? `${selectedWins} saved win${selectedWins === 1 ? '' : 's'} in recent history.` : 'No saved wins yet.';
-  selectionTrackMedianEl.textContent = leader.key === selected.key ? `${leader.label} is also the current tape leader.` : `${leader.label} owns ${leaderWins} saved win${leaderWins === 1 ? '' : 's'} and is the current pressure baseline.`;
+  selectionTrackMedianEl.textContent = leader.key === selected.key ? `${leader.label} also leads this comparison.` : `${leader.label} leads this comparison and has ${leaderWins} saved win${leaderWins === 1 ? '' : 's'}.`;
   selectionTrackCueEl.textContent =
     selectedRank === 1 || selectedWins >= 2
-      ? `${selected.label} is repeatable enough to pitch as a dependable fit, not just a one-array curiosity.`
-      : `${selected.label} works better as a contrast case: explain when its behavior is worth the extra work instead of claiming it as the default winner.`;
+      ? `${selected.label} has done well on these arrays. Try a different input pattern to see where that changes.`
+      : `Step through ${selected.label} alongside the winner to see which operations add to its count.`;
 }
 
 function runPresetGauntlet() {
@@ -2009,15 +2009,15 @@ function runPresetGauntlet() {
     }))
     .sort((a, b) => b.margin - a.margin)[0];
 
-  gauntletSummaryEl.textContent = `${leader} won ${winCounts[leader]} of ${results.length} preset families in the current gauntlet.`;
+  gauntletSummaryEl.textContent = `${leader} had the lowest total count on ${winCounts[leader]} of the ${results.length} presets.`;
   gauntletLeaderEl.textContent = `${leader} (${winCounts[leader]} wins)`;
   gauntletBaselineEl.textContent = `${baseline} (${podiumCounts[baseline]} podium points)`;
   gauntletUpsetEl.textContent = `${biggestUpset.workload}: ${biggestUpset.winner.label} by ${biggestUpset.margin} ops`;
   gauntletCueEl.textContent =
     leader === baseline
-      ? `${leader} is both the repeat winner and the steadiest baseline, so it is the cleanest anchor for multi-workload demos.`
-      : `${leader} wins the most presets, but ${baseline} is steadier across the full field. Use both to explain specialist vs baseline behavior.`;
-  setStatus('Preset gauntlet complete.');
+      ? `${leader} won the most presets and had the highest combined ranking score.`
+      : `${leader} won the most presets. ${baseline} had the highest combined ranking score. Compare both across the different inputs.`;
+  setStatus('Six-preset comparison complete.');
 }
 
 function updateBenchmarkVerdict(rows = []) {
@@ -2067,7 +2067,7 @@ function updateBenchmarkVerdict(rows = []) {
   }
 
   if (best.key === stablePick.key) {
-    benchmarkCoachEl.textContent = 'The leading algorithm is also stable, so duplicate-heavy data should stay readable.';
+    benchmarkCoachEl.textContent = 'The leading algorithm is stable: equal values keep their original relative order.';
   } else if (selected.key === best.key) {
     benchmarkCoachEl.textContent = `${selected.label} already leads this workload, so the current pick is aligned with the input shape.`;
   } else if (selectedGap <= Math.max(12, bestValue * 0.12)) {
@@ -2088,7 +2088,7 @@ function renderBenchmarkPressure(rows = lastComparisonRows) {
   const rankedRows = rankComparisonRows(rows);
 
   if (!rankedRows.length) {
-    benchmarkPressureSummaryEl.textContent = 'Run Compare All to measure how much pressure is on the current algorithm pick.';
+    benchmarkPressureSummaryEl.textContent = 'Run Compare All to check your selected algorithm.';
     benchmarkPressureLeaderEl.textContent = '-';
     benchmarkPressureCurrentEl.textContent = '-';
     benchmarkPressureGapEl.textContent = '-';
@@ -2109,14 +2109,14 @@ function renderBenchmarkPressure(rows = lastComparisonRows) {
   let cue = `Open with ${leader.label}, then use ${selected.label} as the contrast pick.`;
 
   if (selected.key === leader.key) {
-    summary = `${selected.label} is carrying the benchmark load right now.`;
-    cue = `Use ${runnerUp.label} as the contrast so the win looks earned instead of accidental.`;
+    summary = `${selected.label} has the lowest count for the selected metric.`;
+    cue = `Compare its steps with ${runnerUp.label} to see where the counts differ.`;
   } else if (gap <= Math.max(12, getMetricValue(leader, metric) * 0.12)) {
-    summary = `${selected.label} is close enough to the lead that the choice can be justified by teachability, not just raw ops.`;
-    cue = 'Narrate why the current pick stays defensible even without topping the table.';
+    summary = `${selected.label} has a count close to the leader on this array.`;
+    cue = 'Compare memory use and sorting stability as well as the recorded operation count.';
   } else if (selectedRank >= rankedRows.length - 2) {
-    summary = `${selected.label} is under real benchmark pressure and should be framed as a deliberate teaching contrast.`;
-    cue = 'Use the replay to explain the failure mode, then pivot back to the winner table.';
+    summary = `${selected.label} is among the highest-count algorithms on this array.`;
+    cue = 'Step through the run to see where it does more work than the leader.';
   }
 
   benchmarkPressureSummaryEl.textContent = summary;
@@ -2322,7 +2322,7 @@ function importComparisonTape(event) {
 function buildBenchmarkBrief() {
   const selectedLabel = algorithmSelect.options[algorithmSelect.selectedIndex]?.text || 'Selected algorithm';
   const lines = [
-    'Algorithm Visualizer Benchmark Brief',
+    'Algorithm Visualizer Comparison Notes',
     '',
     `Selected algorithm: ${selectedLabel}`,
     `Array size: ${baseArray.length}`,
@@ -2347,9 +2347,9 @@ function buildBenchmarkBrief() {
 function buildGauntletBrief() {
   if (!lastGauntletResults.length) {
     return [
-      'Algorithm Visualizer Gauntlet Brief',
+      'Algorithm Visualizer Preset Results',
       '',
-      'Run the preset gauntlet before exporting a reusable workload-family summary.',
+      'Click Compare Six Presets before copying the results.',
     ].join('\n');
   }
 
@@ -2374,13 +2374,13 @@ function buildGauntletBrief() {
     .sort((left, right) => right.margin - left.margin)[0];
 
   const lines = [
-    'Algorithm Visualizer Gauntlet Brief',
+    'Algorithm Visualizer Preset Results',
     '',
     `Current metric: ${comparisonMetricLabels[getSelectedComparisonMetric()]}`,
     `Leader: ${leader}`,
     `Baseline: ${baseline}`,
     biggestUpset ? `Largest upset: ${biggestUpset.workload} | ${biggestUpset.winner} by ${biggestUpset.margin} ops` : 'Largest upset: -',
-    `Narration cue: ${gauntletCueEl?.textContent || 'Run the gauntlet to populate the cross-workload cue.'}`,
+    `What to compare: ${gauntletCueEl?.textContent || 'Click Compare Six Presets to see the results.'}`,
     '',
     'Workload winners:',
   ];
@@ -2626,7 +2626,7 @@ copyBriefBtn?.addEventListener('click', async () => {
 copyGauntletBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildGauntletBrief());
-    setStatus(lastGauntletResults.length ? 'Copied the current gauntlet brief.' : 'Copied a gauntlet prompt; run the gauntlet to populate results.');
+    setStatus(lastGauntletResults.length ? 'Copied the preset comparison results.' : 'Run Compare Six Presets to include results in the copied notes.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }
